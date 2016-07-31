@@ -153,6 +153,9 @@
          </item>
          <item row="2" column="1">
           <widget class="QLineEdit" name="leUID">
+           <property name="acceptDrops">
+            <bool>false</bool>
+           </property>
            <property name="readOnly">
             <bool>false</bool>
            </property>

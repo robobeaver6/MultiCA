@@ -1,6 +1,7 @@
 from PyQt5 import QtCore, QtWidgets, QtGui
 import uuid
 
+
 class Node (object):
     def __init__(self, name, parent=None):
         self._name = name
@@ -21,7 +22,7 @@ class Node (object):
         if parent is not None:
             parent.addChild(self)
 
-        print ("Created  {} : {}".format(self._name, self._uid))
+        #print ("Created  {} : {}".format(self._name, self._uid))
 
     def addChild(self, child):
         self._children.append(child)
@@ -44,7 +45,9 @@ class Node (object):
         return self._name
 
     def child(self, row):
-        return self._children[row]
+        print("Row: {}  :  {}".format(row, len(self._children)-1))
+        if row < len(self._children) and row >= 0:
+            return self._children[row]
 
     def childCount(self):
         return len(self._children)
@@ -54,7 +57,8 @@ class Node (object):
 
     def row(self):
         if self._parent is not None:
-            return not self._parent._children.index(self)
+            #print (self._parent._children.index(self))
+            return self._parent._children.index(self)
 
     ## setters
     def setName(self, value):
@@ -95,7 +99,7 @@ class Node (object):
 
     ##getters
     def getUID(self):
-        return self._uid
+        return str(self._uid)
 
     def getCommonName(self):
         return self._commonName
@@ -142,29 +146,21 @@ class TreeModel(QtCore.QAbstractItemModel):
         return parentNode.childCount()
 
     def columnCount(self, parent=QtCore.QModelIndex()):
-        return 2
+        return 3
 
     def data(self, index, role=None):
         if not index.isValid():
             return None
 
         node = index.internalPointer()
-        print ("Role = {} : Column = {} : Row = {}".format(role, index.column(), index.row()))
+        #print ("Role = {} : Column = {} : Row = {}".format(role, index.column(), index.row()))
         if role == QtCore.Qt.DisplayRole or QtCore.Qt.EditRole:
-             if index.column() == 0:
-                 print ("Col0 = {}".format(node.name()))
-                 return node.name()
-            # elif index.column() == 1:
-            #     print ("Col1 = {}".format(node.getUID()))
-            #     return node.getUID()
-            #if index.column() == 0:
-            #    return "Column 0"
-            # elif index.column() == 1:
-            #     return "Column 1"
-            # elif index.column() == 2:
-            #     return "Column 2"
-            # elif index.column() == 3:
-            #     return "Column 3"
+            if index.column() == 0:
+                #print ("Col0 = {}".format(node.name()))
+                return node.name()
+            if index.column() == 1:
+                #print("Col1 = {}".format(node.name()))
+                return node.getUID()
 
 
 
@@ -177,7 +173,7 @@ class TreeModel(QtCore.QAbstractItemModel):
                     # noinspection PyUnresolvedReferences
                     self.dataChanged.emit(index, index)
                 return True
-            return False
+        return False
 
     def headerData(self, section, orientation, role=None):
         if role == QtCore.Qt.DisplayRole and orientation == QtCore.Qt.Horizontal:
@@ -187,19 +183,29 @@ class TreeModel(QtCore.QAbstractItemModel):
                 return ""
 
     def flags(self, index):
-        #return QtCore.Qt.ItemIsEditable | QtCore.Qt.ItemIsEnabled | QtCore.Qt.ItemIsSelectable
-        return QtCore.Qt.ItemIsEnabled | QtCore.Qt.ItemIsSelectable
+        if index.isValid():
+            #return QtCore.Qt.ItemIsEditable | QtCore.Qt.ItemIsEnabled | QtCore.Qt.ItemIsSelectable
+            return QtCore.Qt.ItemIsEnabled | QtCore.Qt.ItemIsSelectable
 
-    def parent(self, index=None):
-        node = self.getNode(index)
-        parentNode = node.parent()
+    def parent(self, index=QtCore.QModelIndex()):
+        if index.isValid():
+            node = self.getNode(index)
+            parentNode = node.parent()
+            row = parentNode.row()
+            print("   {}   {}  ".format(row, index.column()))
+            if parentNode == self._rootNode or row == None:
+                return QtCore.QModelIndex()
 
-        if parentNode == self._rootNode:
-            return QtCore.QModelIndex()
+            newIndex = self.createIndex(row, 0, parentNode)
 
-        return self.createIndex(parentNode.row(), 0, parentNode)
+            return newIndex
+        print("INVALID Index in Parent func")
+        return QtCore.QModelIndex()
 
     def index(self, row, column, parent=None, *args, **kwargs):
+        if row<0 or column <0:
+            return QtCore.QModelIndex()
+
         parentNode = self.getNode(parent)
 
         childItem = parentNode.child(row)
@@ -229,13 +235,13 @@ class TreeModel(QtCore.QAbstractItemModel):
         return success
 
     def getNode(self, index):
-        if index.isValid():
-            node = index.internalPointer()
-            if node:
-                return node
+        if index:
+            if index.isValid():
+                node = index.internalPointer()
+                if node:
+                    return node
 
         return self._rootNode
 
-
-
-
+if __name__ == "__main__":
+    pass

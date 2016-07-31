@@ -15,10 +15,13 @@ class wndMain(base, form):
         rootNode = caTree.Node("Root Node")
         childNode1 = caTree.Node("CA1", rootNode)
         childNode2 = caTree.Node("CA1-A", childNode1)
-        childNode3 = caTree.Node("CA1-B", childNode2)
+        childNode3 = caTree.Node("CA1-B", childNode1)
         childNode4 = caTree.Node("CA2", rootNode)
         childNode5 = caTree.Node("CA2-A", childNode4)
-        childNode6 = caTree.Node("CA2-B", childNode5)
+        childNode6 = caTree.Node("CA2-B", childNode4)
+        childNode7 = caTree.Node("CA2-A-1", childNode5)
+        childNode8 = caTree.Node("CA3", rootNode)
+        childNode9 = caTree.Node("CA4", rootNode)
 
         self._model = caTree.TreeModel(rootNode)
 
