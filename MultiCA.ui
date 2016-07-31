@@ -91,7 +91,22 @@
        <item>
         <widget class="QTreeView" name="treeView">
          <property name="sizeAdjustPolicy">
-          <enum>QAbstractScrollArea::AdjustToContents</enum>
+          <enum>QAbstractScrollArea::AdjustIgnored</enum>
+         </property>
+         <property name="showDropIndicator" stdset="0">
+          <bool>false</bool>
+         </property>
+         <property name="alternatingRowColors">
+          <bool>true</bool>
+         </property>
+         <property name="iconSize">
+          <size>
+           <width>20</width>
+           <height>40</height>
+          </size>
+         </property>
+         <property name="textElideMode">
+          <enum>Qt::ElideLeft</enum>
          </property>
          <property name="sortingEnabled">
           <bool>true</bool>
@@ -139,7 +154,7 @@
          <item row="2" column="1">
           <widget class="QLineEdit" name="leUID">
            <property name="readOnly">
-            <bool>true</bool>
+            <bool>false</bool>
            </property>
           </widget>
          </item>
@@ -151,17 +166,17 @@
           </widget>
          </item>
          <item row="3" column="1">
-          <widget class="QLineEdit" name="lineEdit"/>
+          <widget class="QLineEdit" name="leCommonName"/>
          </item>
          <item row="4" column="0">
           <widget class="QLabel" name="label_10">
            <property name="text">
-            <string>Oranization (O)</string>
+            <string>Organization (O)</string>
            </property>
           </widget>
          </item>
          <item row="4" column="1">
-          <widget class="QLineEdit" name="lineEdit_2"/>
+          <widget class="QLineEdit" name="leOrganization"/>
          </item>
          <item row="5" column="0">
           <widget class="QLabel" name="label_2">
@@ -171,7 +186,7 @@
           </widget>
          </item>
          <item row="5" column="1">
-          <widget class="QLineEdit" name="lineEdit_3"/>
+          <widget class="QLineEdit" name="leLocality"/>
          </item>
          <item row="6" column="0">
           <widget class="QLabel" name="label">
@@ -181,7 +196,7 @@
           </widget>
          </item>
          <item row="6" column="1">
-          <widget class="QLineEdit" name="lineEdit_4"/>
+          <widget class="QLineEdit" name="leStateOrProvince"/>
          </item>
          <item row="7" column="0">
           <widget class="QLabel" name="label_9">
@@ -191,7 +206,7 @@
           </widget>
          </item>
          <item row="7" column="1">
-          <widget class="QLineEdit" name="lineEdit_5"/>
+          <widget class="QLineEdit" name="leCountry"/>
          </item>
          <item row="8" column="0">
           <widget class="QLabel" name="label_3">
@@ -201,7 +216,7 @@
           </widget>
          </item>
          <item row="8" column="1">
-          <widget class="QPlainTextEdit" name="plainTextEdit">
+          <widget class="QPlainTextEdit" name="teCertificate">
            <property name="enabled">
             <bool>true</bool>
            </property>
@@ -238,6 +253,13 @@
           <widget class="QDateTimeEdit" name="dtEnd">
            <property name="calendarPopup">
             <bool>true</bool>
+           </property>
+          </widget>
+         </item>
+         <item row="11" column="0">
+          <widget class="QCheckBox" name="checkBox">
+           <property name="text">
+            <string>CheckBox</string>
            </property>
           </widget>
          </item>

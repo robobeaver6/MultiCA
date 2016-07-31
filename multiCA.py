@@ -30,7 +30,8 @@ class wndMain(base, form):
         self._dataMapper = QtWidgets.QDataWidgetMapper()
         self._dataMapper.setModel(self._model)
         self._dataMapper.addMapping(self.leName, 0)
-        self._dataMapper.toFirst()
+        self._dataMapper.addMapping(self.leUID, 1)
+        #self._dataMapper.toFirst()
         print (self._dataMapper)
 
         self.leName.editingFinished.connect(self.test)
@@ -66,7 +67,6 @@ class wndMain(base, form):
         self._dataMapper.setCurrentModelIndex(current)
         node = self._model.getNode(current)
         print ("Changed: {}".format(node.name()))
-        self.treeView.dataChanged(current,current)
 
 class testSignal(QObject):
     trigger = pyqtSignal()
@@ -74,7 +74,7 @@ class testSignal(QObject):
 
 if __name__ == "__main__":
     app = QtWidgets.QApplication(sys.argv)
-    app.setStyle("windowsvista")
+    app.setStyle("windowsVista")
 
     window = wndMain()
     window.show()
