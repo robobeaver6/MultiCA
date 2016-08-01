@@ -188,7 +188,10 @@ class TreeModel(QtCore.QAbstractItemModel):
             return QtCore.Qt.ItemIsEnabled | QtCore.Qt.ItemIsSelectable
 
     def parent(self, index=QtCore.QModelIndex()):
+        #'''
         if index.isValid():
+            if index.column() > 0:
+                return QtCore.QModelIndex()
             node = self.getNode(index)
             parentNode = node.parent()
             row = parentNode.row()
@@ -201,6 +204,19 @@ class TreeModel(QtCore.QAbstractItemModel):
             return newIndex
         print("INVALID Index in Parent func")
         return QtCore.QModelIndex()
+        #'''
+
+        ##############################
+        # copyed from some exampe doc
+        ##############################
+        # if not index.isValid():
+        #     return QtCore.QModelIndex()
+        # node = index.internalPointer()
+        # if node.parent is None:
+        #     return QtCore.QModelIndex()
+        # else:
+        #     return self.createIndex(node.row(), 0, node.parent)
+
 
     def index(self, row, column, parent=None, *args, **kwargs):
         if row<0 or column <0:
