@@ -45,7 +45,7 @@ class Node (object):
         return self._name
 
     def child(self, row):
-        print("Row: {}  :  {}".format(row, len(self._children)-1))
+        #print("{} Row:{}  :  Children{}".format(self._name, row, len(self._children)-1))
         if row < len(self._children) and row >= 0:
             return self._children[row]
 
@@ -188,14 +188,14 @@ class TreeModel(QtCore.QAbstractItemModel):
             return QtCore.Qt.ItemIsEnabled | QtCore.Qt.ItemIsSelectable
 
     def parent(self, index=QtCore.QModelIndex()):
-        #'''
+        #''''
         if index.isValid():
-            if index.column() > 0:
-                return QtCore.QModelIndex()
+            #if index.column() > 0:
+            #    return QtCore.QModelIndex()
             node = self.getNode(index)
             parentNode = node.parent()
             row = parentNode.row()
-            print("   {}   {}  ".format(row, index.column()))
+            #print("   ROW:{}   COL:{}  ".format(row, index.column()))
             if parentNode == self._rootNode or row == None:
                 return QtCore.QModelIndex()
 
@@ -211,8 +211,11 @@ class TreeModel(QtCore.QAbstractItemModel):
         ##############################
         # if not index.isValid():
         #     return QtCore.QModelIndex()
-        # node = index.internalPointer()
+        # node = self.getNode(index)
+        # print(node.name())
         # if node.parent is None:
+        #     return QtCore.QModelIndex()
+        # elif self.parent() == self._rootNode or self.row() == None:
         #     return QtCore.QModelIndex()
         # else:
         #     return self.createIndex(node.row(), 0, node.parent)
@@ -221,7 +224,7 @@ class TreeModel(QtCore.QAbstractItemModel):
     def index(self, row, column, parent=None, *args, **kwargs):
         if row<0 or column <0:
             return QtCore.QModelIndex()
-
+        print("ROW:{} COL{}".format(row, column))
         parentNode = self.getNode(parent)
 
         childItem = parentNode.child(row)
@@ -255,8 +258,9 @@ class TreeModel(QtCore.QAbstractItemModel):
             if index.isValid():
                 node = index.internalPointer()
                 if node:
+                    #print("getNode Returned Node")
                     return node
-
+        #print("getNode Returned Root Node")
         return self._rootNode
 
 if __name__ == "__main__":
