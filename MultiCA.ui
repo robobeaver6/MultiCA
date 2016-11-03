@@ -94,7 +94,7 @@
           <enum>QAbstractScrollArea::AdjustIgnored</enum>
          </property>
          <property name="showDropIndicator" stdset="0">
-          <bool>false</bool>
+          <bool>true</bool>
          </property>
          <property name="alternatingRowColors">
           <bool>true</bool>
@@ -279,7 +279,7 @@
      <x>0</x>
      <y>0</y>
      <width>988</width>
-     <height>25</height>
+     <height>21</height>
     </rect>
    </property>
    <widget class="QMenu" name="menuFile">
