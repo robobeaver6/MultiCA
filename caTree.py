@@ -5,6 +5,7 @@ import uuid
 class Node (object):
     def __init__(self, name, parent=None):
         self._name = name
+        self._description = ''
         self._children = []
         self._parent = parent
         self._uid = uuid.uuid4()
@@ -67,6 +68,9 @@ class Node (object):
     def setUID(self, value):
         self._uid = value
 
+    def setDescription(self, value):
+        self._description = value
+
     def setCommonName(self, value):
         self._commonName = value
 
@@ -98,8 +102,14 @@ class Node (object):
         self._dateEnd = value
 
     # getters
+    def getName(self):
+        return str(self._name)
+
     def getUID(self):
         return str(self._uid)
+
+    def getDescription(self):
+        return str(self._description)
 
     def getCommonName(self):
         return self._commonName
@@ -137,15 +147,20 @@ class TreeModel(QtCore.QAbstractItemModel):
         super(TreeModel,self).__init__(parent)
         self._rootNode = root
 
-    def rowCount(self, parent=QtCore.QModelIndex()):
+    def rowCount(self, parent=QtCore.QModelIndex(), *args, **kwargs):
         if not parent.isValid():
-            parent_node = self._rootNode
+            # parent_node = self._rootNode
+            children = self._rootNode.childCount()
+            print("DEBUG###", children)
+            return children
         else:
             parent_node = parent.internalPointer()
+        counter = parent_node.childCount()
+        return counter
 
-        return parent_node.childCount()
 
-    def columnCount(self, parent=QtCore.QModelIndex()):
+
+    def columnCount(self, parent=QtCore.QModelIndex(), *args, **kwargs):
         return 3
 
     def data(self, index, role=None):
@@ -158,6 +173,9 @@ class TreeModel(QtCore.QAbstractItemModel):
                 # print ("Col0 = {}".format(node.name()))
                 return node.name()
             if index.column() == 1:
+                # print("Col1 = {}".format(node.name()))
+                return node.getDescription()
+            if index.column() == 2:
                 # print("Col1 = {}".format(node.name()))
                 return node.getUID()
 
@@ -202,8 +220,14 @@ class TreeModel(QtCore.QAbstractItemModel):
     def index(self, row, column, parent=None, *args, **kwargs):
         if row<0 or column <0:
             return QtCore.QModelIndex()
-        print("ROW:{} COL{}".format(row, column))
+        # print("ROW:{} COL{}".format(row, column))
         parent_node = self.getNode(parent)
+
+        # return empty index if calling column > 1
+        if parent:
+            if parent.column() > 0:
+                # print("DEBUG### ", parent.column())
+                return QtCore.QModelIndex()
 
         child_item = parent_node.child(row)
 
