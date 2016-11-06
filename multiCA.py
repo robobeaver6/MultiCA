@@ -60,29 +60,18 @@ class wndMain(base, form):
 
     @pyqtSlot()
     def on_click_manage(self):
-        sel_model = self.treeView.selectionModel()
-        index = sel_model.selectedRows()[0]
-        node = self._model.getNode(index)
-        print(node.name())
-        self.leName.setText(node.name())
+        self._root_node.save_data('data.json')
 
     @pyqtSlot()
     def on_click_create_root(self):
-        # Clear existing data and connections
-        self.treeView.clearSelection()
-        self._dataMapper.clearMapping()
-        self.__clear_form()
-
-        # Create New Node
-        # new_node = caTree.Node("New Node", rootNode)
+        # get the index for the root node
         root_node_index = self._model.createIndex(0, 0, self._root_node)
-        # root_child_count = self._root_node.childCount()
-        root_child_count = 1
-        self._model.insertRow(root_child_count - 1, root_node_index)
-
-        #self.TreeView.setSelection()
-
-
+        # get the position to add new node to the end of the list
+        root_child_count = self._root_node.childCount()
+        # insert the new node
+        self._model.insertRow(root_child_count, root_node_index)
+        # select created node
+        self.treeView.setCurrentIndex(self._model.index(root_child_count, 0))
 
     @pyqtSlot()
     def on_click_create_sub(self):
@@ -106,10 +95,7 @@ class wndMain(base, form):
         self._dataMapper.setRootIndex(parent)
         self._dataMapper.setCurrentModelIndex(current)
         node = self._model.getNode(current)
-        print ("Changed: {}".format(node.name()))
-
-class testSignal(QObject):
-    trigger = pyqtSignal()
+        print("Changed: {}".format(node.name()))
 
 
 if __name__ == "__main__":
@@ -118,6 +104,5 @@ if __name__ == "__main__":
 
     window = wndMain()
     window.show()
-
 
     sys.exit(app.exec_())

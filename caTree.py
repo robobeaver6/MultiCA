@@ -1,5 +1,6 @@
 from PyQt5 import QtCore, QtWidgets, QtGui
 import uuid
+import json
 
 
 class Node (object):
@@ -62,6 +63,10 @@ class Node (object):
         if self._parent is not None:
             # print (self._parent._children.index(self))
             return self._parent._children.index(self)
+
+    def save_data(self, filename):
+        with open(filename, 'w') as f:
+            json.dumps(self)
 
     # setters
     def setName(self, value):
@@ -257,9 +262,7 @@ class TreeModel(QtCore.QAbstractItemModel):
         for row in range(rows):
             child_node = Node("Untitled")
             success = parent_node.insertChild(position, child_node)
-            # new_index = self.createIndex(position, 0, child_node)
-            # self.dataChanged.emit(new_index, new_index)
-            self.layoutChanged.emit()
+            # self.layoutChanged.emit()
         self.endInsertRows()
         # self.dataChanged.emit(parent, parent)
         return success
