@@ -79,6 +79,7 @@ class wndMain(base, form):
         # root_child_count = self._root_node.childCount()
         root_child_count = 1
         self._model.insertRow(root_child_count - 1, root_node_index)
+
         #self.TreeView.setSelection()
 
 

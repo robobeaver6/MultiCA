@@ -259,6 +259,7 @@ class TreeModel(QtCore.QAbstractItemModel):
             success = parent_node.insertChild(position, child_node)
             # new_index = self.createIndex(position, 0, child_node)
             # self.dataChanged.emit(new_index, new_index)
+            self.layoutChanged.emit()
         self.endInsertRows()
         # self.dataChanged.emit(parent, parent)
         return success
