@@ -34,6 +34,7 @@ class Node (object):
         else:
             self._children.insert(position, child)
             child._parent = self
+            return True
 
     def removeChild(self, position):
         if position < 0 or position > len(self._children):
@@ -41,6 +42,7 @@ class Node (object):
         else:
             child = self._children.pop(position)
             child._parent = None
+            return False
 
     def name(self):
         return self._name
@@ -102,6 +104,9 @@ class Node (object):
         self._dateEnd = value
 
     # getters
+    def get_root(self):
+        return str(self._root)
+
     def getName(self):
         return str(self._name)
 
@@ -151,7 +156,7 @@ class TreeModel(QtCore.QAbstractItemModel):
         if not parent.isValid():
             # parent_node = self._rootNode
             children = self._rootNode.childCount()
-            print("DEBUG###", children)
+            # print("DEBUG###", children)
             return children
         else:
             parent_node = parent.internalPointer()
@@ -185,7 +190,12 @@ class TreeModel(QtCore.QAbstractItemModel):
             if role == QtCore.Qt.EditRole:
                 if index.column() == 0:
                     node.setName(value)
-                    # noinspection PyUnresolvedReferences
+                    self.dataChanged.emit(index, index)
+                if index.column() == 1:
+                    node.setDescription(value)
+                    self.dataChanged.emit(index, index)
+                if index.column() == 2:
+                    node.setUID(value)
                     self.dataChanged.emit(index, index)
                 return True
         return False
@@ -199,7 +209,7 @@ class TreeModel(QtCore.QAbstractItemModel):
 
     def flags(self, index):
         if index.isValid():
-            return QtCore.Qt.ItemIsEnabled | QtCore.Qt.ItemIsSelectable | QtCore.Qt.ItemIsUserCheckable
+            return QtCore.Qt.ItemIsEnabled | QtCore.Qt.ItemIsSelectable | QtCore.Qt.ItemIsEditable
 
     def parent(self, index=QtCore.QModelIndex()):
         if index.isValid():
@@ -208,19 +218,19 @@ class TreeModel(QtCore.QAbstractItemModel):
             node = self.getNode(index)
             parent_node = node.parent()
             row = parent_node.row()
-            if parent_node == self._rootNode or row == None:
+            if parent_node == self._rootNode or row is None:
                 return QtCore.QModelIndex()
 
-            newIndex = self.createIndex(node.row(), 0, parent_node)
+            new_index = self.createIndex(node.row(), 0, parent_node)
 
-            return newIndex
-        print("INVALID Index in Parent func")
+            return new_index
+        node = self.getNode(index)
+        # print("INVALID Index in Parent func", hex(id(index)), node.getName(), index.row(), index.column())
         return QtCore.QModelIndex()
 
     def index(self, row, column, parent=None, *args, **kwargs):
-        if row<0 or column <0:
+        if row < 0 or column < 0:
             return QtCore.QModelIndex()
-        # print("ROW:{} COL{}".format(row, column))
         parent_node = self.getNode(parent)
 
         # return empty index if calling column > 1
@@ -232,9 +242,14 @@ class TreeModel(QtCore.QAbstractItemModel):
         child_item = parent_node.child(row)
 
         if child_item:
-            return self.createIndex(row, column, child_item)
+            new_index = self.createIndex(row, column, child_item)
+            # print("ROW:{} COL{} parent:{} NODE:{} INDEX:{}".format(row, column, parent_node.getName(), child_item.getName(), hex(id(new_index))))
+            return new_index
         else:
             return QtCore.QModelIndex()
+
+    def insertRow(self, row, parent=None, *args, **kwargs):
+        return self.insertRows(row, 1, parent)
 
     def insertRows(self, position, rows, parent=QtCore.QModelIndex(), *args, **kwargs):
         parent_node = self.getNode(parent)
@@ -242,7 +257,10 @@ class TreeModel(QtCore.QAbstractItemModel):
         for row in range(rows):
             child_node = Node("Untitled")
             success = parent_node.insertChild(position, child_node)
+            # new_index = self.createIndex(position, 0, child_node)
+            # self.dataChanged.emit(new_index, new_index)
         self.endInsertRows()
+        # self.dataChanged.emit(parent, parent)
         return success
 
     def removeRows(self, position, rows, parent=QtCore.QModelIndex(), *args, **kwargs):
@@ -263,6 +281,7 @@ class TreeModel(QtCore.QAbstractItemModel):
                     return node
         # print("getNode Returned Root Node")
         return self._rootNode
+
 
 if __name__ == "__main__":
     pass
