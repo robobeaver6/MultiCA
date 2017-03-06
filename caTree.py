@@ -44,7 +44,7 @@ class Node (object):
             child = self._children.pop(position)
             child._parent = None
             return False
-
+    @property
     def name(self):
         return self._name
 
@@ -56,6 +56,7 @@ class Node (object):
     def childCount(self):
         return len(self._children)
 
+    @property
     def parent(self):
         return self._parent
 
@@ -168,8 +169,6 @@ class TreeModel(QtCore.QAbstractItemModel):
         counter = parent_node.childCount()
         return counter
 
-
-
     def columnCount(self, parent=QtCore.QModelIndex(), *args, **kwargs):
         return 3
 
@@ -181,13 +180,16 @@ class TreeModel(QtCore.QAbstractItemModel):
         if role == QtCore.Qt.DisplayRole or role == QtCore.Qt.EditRole:
             if index.column() == 0:
                 # print ("Col0 = {}".format(node.name()))
-                return node.name()
+                # return node.name()
+                return node.name + str(index)
             if index.column() == 1:
                 # print("Col1 = {}".format(node.name()))
                 return node.getDescription()
+                # return str(index + node.parent)
             if index.column() == 2:
                 # print("Col1 = {}".format(node.name()))
                 return node.getUID()
+                # return str(index + node.parent)
 
     def setData(self, index, value, role=QtCore.Qt.EditRole):
         if index.isValid():
@@ -217,39 +219,45 @@ class TreeModel(QtCore.QAbstractItemModel):
             return QtCore.Qt.ItemIsEnabled | QtCore.Qt.ItemIsSelectable | QtCore.Qt.ItemIsEditable
 
     def parent(self, index=QtCore.QModelIndex()):
+        """
+                 parent(self, QModelIndex) -> QModelIndex
+                 parent(self) -> QObject
+         """
         if index.isValid():
-            # if index.column() > 0:
-            #    return QtCore.QModelIndex()
             node = self.getNode(index)
-            parent_node = node.parent()
-            row = parent_node.row()
-            if parent_node == self._rootNode or row is None:
+            if node is not None:
+                parent_node = node.parent
+                print('          S={}\n        P={}'.format(node.name, parent_node.name))
+            else:
                 return QtCore.QModelIndex()
 
-            new_index = self.createIndex(node.row(), 0, parent_node)
+            if parent_node == self._rootNode:
+                return QtCore.QModelIndex()
 
-            return new_index
-        node = self.getNode(index)
-        # print("INVALID Index in Parent func", hex(id(index)), node.getName(), index.row(), index.column())
-        return QtCore.QModelIndex()
+            return self.createIndex(parent_node.row(), 0, parent_node)
+        else:
+            return QtCore.QModelIndex()
 
     def index(self, row, column, parent=None, *args, **kwargs):
+        """ index(self, int, int, parent: QModelIndex = QModelIndex()) -> QModelIndex """
         if row < 0 or column < 0:
+            valid = True
+            if parent:
+                valid = parent.isValid()
+            print('DEBUG: Row {} or Col {} Invalid\n        R={}\n        P={}  Valid={}'.format(row, column,
+                                                                                                 self._rootNode,
+                                                                                                 parent,
+                                                                                                 valid))
             return QtCore.QModelIndex()
+        if column > 0:
+            return QtCore.QModelIndex()
+
         parent_node = self.getNode(parent)
-
-        # return empty index if calling column > 1
-        if parent:
-            if parent.column() > 0:
-                # print("DEBUG### ", parent.column())
-                return QtCore.QModelIndex()
-
+        print('DEBUG: Row {} or Col {}\n        R={}\n        P={}'.format(row, column, self._rootNode, parent_node))
         child_item = parent_node.child(row)
 
         if child_item:
-            new_index = self.createIndex(row, column, child_item)
-            # print("ROW:{} COL{} parent:{} NODE:{} INDEX:{}".format(row, column, parent_node.getName(), child_item.getName(), hex(id(new_index))))
-            return new_index
+            return self.createIndex(row, column, child_item)
         else:
             return QtCore.QModelIndex()
 
