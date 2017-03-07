@@ -53,7 +53,8 @@ class Node (object):
         if 0 <= row < len(self._children):
             return self._children[row]
 
-    def childCount(self):
+    @property
+    def child_count(self):
         return len(self._children)
 
     @property
@@ -159,15 +160,15 @@ class TreeModel(QtCore.QAbstractItemModel):
         self._rootNode = root
 
     def rowCount(self, parent=QtCore.QModelIndex(), *args, **kwargs):
+        """ rowCount(self, parent: QModelIndex = QModelIndex()) -> int """
         if not parent.isValid():
-            # parent_node = self._rootNode
-            children = self._rootNode.childCount()
-            # print("DEBUG###", children)
-            return children
+            parent_node = self._rootNode
+        elif parent.column() > 0:
+            return 0
         else:
             parent_node = parent.internalPointer()
-        counter = parent_node.childCount()
-        return counter
+
+        return parent_node.child_count
 
     def columnCount(self, parent=QtCore.QModelIndex(), *args, **kwargs):
         return 3
@@ -181,7 +182,7 @@ class TreeModel(QtCore.QAbstractItemModel):
             if index.column() == 0:
                 # print ("Col0 = {}".format(node.name()))
                 # return node.name()
-                return node.name + str(index)
+                return node.name
             if index.column() == 1:
                 # print("Col1 = {}".format(node.name()))
                 return node.getDescription()
@@ -220,14 +221,14 @@ class TreeModel(QtCore.QAbstractItemModel):
 
     def parent(self, index=QtCore.QModelIndex()):
         """
-                 parent(self, QModelIndex) -> QModelIndex
-                 parent(self) -> QObject
-         """
+                parent(self, QModelIndex) -> QModelIndex
+                parent(self) -> QObject
+        """
         if index.isValid():
             node = self.getNode(index)
             if node is not None:
                 parent_node = node.parent
-                print('          S={}\n        P={}'.format(node.name, parent_node.name))
+                # print('          S={}\n        P={}'.format(node.name, parent_node.name))
             else:
                 return QtCore.QModelIndex()
 
@@ -241,21 +242,9 @@ class TreeModel(QtCore.QAbstractItemModel):
     def index(self, row, column, parent=None, *args, **kwargs):
         """ index(self, int, int, parent: QModelIndex = QModelIndex()) -> QModelIndex """
         if row < 0 or column < 0:
-            valid = True
-            if parent:
-                valid = parent.isValid()
-            print('DEBUG: Row {} or Col {} Invalid\n        R={}\n        P={}  Valid={}'.format(row, column,
-                                                                                                 self._rootNode,
-                                                                                                 parent,
-                                                                                                 valid))
             return QtCore.QModelIndex()
-        if column > 0:
-            return QtCore.QModelIndex()
-
         parent_node = self.getNode(parent)
-        print('DEBUG: Row {} or Col {}\n        R={}\n        P={}'.format(row, column, self._rootNode, parent_node))
         child_item = parent_node.child(row)
-
         if child_item:
             return self.createIndex(row, column, child_item)
         else:

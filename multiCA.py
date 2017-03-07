@@ -67,7 +67,7 @@ class wndMain(base, form):
         # get the index for the root node
         root_node_index = self._model.createIndex(0, 0, self._root_node)
         # get the position to add new node to the end of the list
-        root_child_count = self._root_node.childCount()
+        root_child_count = self._root_node.child_count()
         # insert the new node
         self._model.insertRow(root_child_count, root_node_index)
         # select created node

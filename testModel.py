@@ -26,4 +26,3 @@ def test_abstract_item_model(qtmodeltester):
 
     qtmodeltester.check(model)
 
-    print(childNode1.name())
