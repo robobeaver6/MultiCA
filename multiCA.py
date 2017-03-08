@@ -71,18 +71,14 @@ class wndMain(base, form):
 
     @pyqtSlot()
     def on_click_manage(self):
-        sel_model = self.treeView.selectionModel()
-        index = sel_model.selectedRows()[0]
-        node = self._model.getNode(index)
-        print(node.name())
-        self.leName.setText(node.name())
+        pass
 
     @pyqtSlot()
     def on_click_create_root(self):
         index = self._selectionModel.currentIndex()
         index = self._proxyModel.mapToSource(index)
         while index.isValid():
-            print(index.internalPointer().name)
+            # print(index.internalPointer().name)
             index = index.parent()
         end_of_list = self._model._rootNode.child_count
         self._model.insertRow(end_of_list, index)
