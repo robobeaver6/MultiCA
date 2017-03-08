@@ -4,7 +4,25 @@ import sys
 import caTree
 
 base, form = uic.loadUiType("MultiCA.ui")
+baseNewCA, formNewCA = uic.loadUiType("NewCA_Dialog.ui")
 
+class wndNewCA(baseNewCA, formNewCA):
+    def __init__(self, parent=None, name='Untitled', description=None):
+        super(baseNewCA, self).__init__(parent)
+        self.setupUi(self)
+
+        # self.buttonBox.accepted.connect(self.on_click_create_root)
+
+        @pyqtSlot()
+        def on_click_create_root(self):
+            print('OK Pressed')
+            # index = self._selectionModel.currentIndex()
+            # index = self._proxyModel.mapToSource(index)
+            # while index.isValid():
+            #     # print(index.internalPointer().name)
+            #     index = index.parent()
+            # end_of_list = self._model._rootNode.child_count
+            # self._model.insertRow(end_of_list, index)
 
 class wndMain(base, form):
     def __init__(self, parent=None):
@@ -37,9 +55,7 @@ class wndMain(base, form):
         self._proxyModel.setDynamicSortFilter(True)
         self._proxyModel.setFilterCaseSensitivity(QtCore.Qt.CaseInsensitive)
 
-        # self.treeView.setModel(self._proxyModel.sourceModel())
         self.treeView.setModel(self._proxyModel)
-        # self.treeView.setModel(self._model)
         self.treeView.expandAll()
         self.treeView.setSortingEnabled(True)
 
@@ -53,6 +69,7 @@ class wndMain(base, form):
         self.btnManage.clicked.connect(self.on_click_manage)
         self.btnCreateRoot.clicked.connect(self.on_click_create_root)
         self.btnCreateSub.clicked.connect(self.on_click_create_sub)
+        self.btnDelete.clicked.connect(self.on_click_delete)
 
     def __connect_data_mapper(self):
         pass
@@ -64,32 +81,6 @@ class wndMain(base, form):
         self._dataMapper.addMapping(self.leDescription, 1)
         self._dataMapper.addMapping(self.leUID, 2)
 
-    def __clear_form(self):
-        self.leName.setText(None)
-        self.leDescription.setText(None)
-        self.leUID.setText(None)
-
-    @pyqtSlot()
-    def on_click_manage(self):
-        pass
-
-    @pyqtSlot()
-    def on_click_create_root(self):
-        index = self._selectionModel.currentIndex()
-        index = self._proxyModel.mapToSource(index)
-        while index.isValid():
-            # print(index.internalPointer().name)
-            index = index.parent()
-        end_of_list = self._model._rootNode.child_count
-        self._model.insertRow(end_of_list, index)
-
-    @pyqtSlot()
-    def on_click_create_sub(self):
-        index = self._selectionModel.currentIndex()
-        index = self._proxyModel.mapToSource(index)
-        end_of_list = index.internalPointer().child_count
-        self._model.insertRow(end_of_list, index)
-
     @pyqtSlot(QtCore.QModelIndex, QtCore.QModelIndex)
     def selection_changed(self, current, old):
         current = self._proxyModel.mapToSource(current)
@@ -98,6 +89,53 @@ class wndMain(base, form):
         self._dataMapper.setRootIndex(parent)
         self._dataMapper.setCurrentModelIndex(current)
 
+    @pyqtSlot()
+    def on_click_manage(self):
+        pass
+
+    @pyqtSlot()
+    def on_click_create_root(self):
+        # win_new_ca = wndNewCA(self, name='untitled', description=None)
+        # win_new_ca.setWindowModality(QtCore.Qt.WindowModal)
+        # win_new_ca.show()
+        name, okPressed = QtWidgets.QInputDialog.getText(self, "New CA", "CA Name:", QtWidgets.QLineEdit.Normal, "")
+        if okPressed and name != '':
+            index = self._selectionModel.currentIndex()
+            index = self._proxyModel.mapToSource(index)
+            while index.isValid():
+                # print(index.internalPointer().name)
+                index = index.parent()
+            end_of_list = self._model._rootNode.child_count
+            self._model.insertRow(end_of_list, index, name=name)
+
+    @pyqtSlot()
+    def on_click_create_sub(self):
+        index = self._selectionModel.currentIndex()
+        index = self._proxyModel.mapToSource(index)
+        if index.isValid():
+            name, okPressed = QtWidgets.QInputDialog.getText(self, "New Sub CA", "Sub CA Name:",
+                                                             QtWidgets.QLineEdit.Normal, "")
+            if okPressed and name != '':
+                end_of_list = index.internalPointer().child_count
+                self._model.insertRow(end_of_list, index, name=name)
+
+    def on_click_delete(self):
+        index = self._selectionModel.currentIndex()
+        index = self._proxyModel.mapToSource(index)
+        if index.isValid():
+            node = index.internalPointer()
+            msg = QtWidgets.QMessageBox(self)
+            msg.setIcon(QtWidgets.QMessageBox.Warning)
+            msg.setStandardButtons(QtWidgets.QMessageBox.Ok | QtWidgets.QMessageBox.Cancel)
+            msg.setDefaultButton(QtWidgets.QMessageBox.Ok)
+            msg.setText("!!!Delete CA!!!")
+            msg.setInformativeText("This will delete {}, {} Sub CA's and all associated Keys".format(node.name,
+                                                                                                     node.child_count))
+            msg.setWindowTitle("DELETE CA")
+            return_val = msg.exec()
+            if return_val == QtWidgets.QMessageBox.Ok:
+                self._model.removeRow(index.row(), index.parent())
+                
 
 if __name__ == "__main__":
     app = QtWidgets.QApplication(sys.argv)
