@@ -253,18 +253,24 @@ class TreeModel(QtCore.QAbstractItemModel):
             return QtCore.QModelIndex()
 
     def insertRow(self, row, parent=None, *args, **kwargs):
-        return self.insertRows(row, 1, parent)
+        return self.insertRows(row, 1, parent, **kwargs)
 
     def insertRows(self, position, rows, parent=QtCore.QModelIndex(), *args, **kwargs):
         parent_node = self.getNode(parent)
         self.beginInsertRows(parent, position, position+rows-1)
         for row in range(rows):
-            child_node = Node("Untitled")
+            if 'name' in kwargs.keys():
+                child_node = Node(kwargs['name'])
+            else:
+                child_node = Node('Untitled')
             success = parent_node.insertChild(position, child_node)
             # self.layoutChanged.emit()
         self.endInsertRows()
         # self.dataChanged.emit(parent, parent)
         return success
+
+    def removeRow(self, row, parent=None, *args, **kwargs):
+        return self.removeRows(row, 1, parent, **kwargs)
 
     def removeRows(self, position, rows, parent=QtCore.QModelIndex(), *args, **kwargs):
         parent_node = self.getNode(parent)

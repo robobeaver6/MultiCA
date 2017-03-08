@@ -31,26 +31,6 @@
       </property>
       <layout class="QHBoxLayout" name="horizontalLayout_2">
        <item>
-        <widget class="QPushButton" name="btnManage">
-         <property name="text">
-          <string>Manage CA</string>
-         </property>
-        </widget>
-       </item>
-       <item>
-        <spacer name="horizontalSpacer">
-         <property name="orientation">
-          <enum>Qt::Horizontal</enum>
-         </property>
-         <property name="sizeHint" stdset="0">
-          <size>
-           <width>40</width>
-           <height>20</height>
-          </size>
-         </property>
-        </spacer>
-       </item>
-       <item>
         <widget class="QPushButton" name="btnCreateRoot">
          <property name="sizePolicy">
           <sizepolicy hsizetype="Minimum" vsizetype="Fixed">
@@ -73,6 +53,33 @@
          </property>
          <property name="text">
           <string>Create Sub CA</string>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QPushButton" name="btnManage">
+         <property name="text">
+          <string>Manage CA</string>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <spacer name="horizontalSpacer">
+         <property name="orientation">
+          <enum>Qt::Horizontal</enum>
+         </property>
+         <property name="sizeHint" stdset="0">
+          <size>
+           <width>40</width>
+           <height>20</height>
+          </size>
+         </property>
+        </spacer>
+       </item>
+       <item>
+        <widget class="QPushButton" name="btnDelete">
+         <property name="text">
+          <string>Delete</string>
          </property>
         </widget>
        </item>
@@ -108,6 +115,9 @@
          <property name="textElideMode">
           <enum>Qt::ElideLeft</enum>
          </property>
+         <property name="autoExpandDelay">
+          <number>5</number>
+         </property>
          <property name="sortingEnabled">
           <bool>true</bool>
          </property>
@@ -119,6 +129,9 @@
          </attribute>
          <attribute name="headerMinimumSectionSize">
           <number>100</number>
+         </attribute>
+         <attribute name="headerStretchLastSection">
+          <bool>false</bool>
          </attribute>
         </widget>
        </item>

@@ -135,7 +135,7 @@ class wndMain(base, form):
             return_val = msg.exec()
             if return_val == QtWidgets.QMessageBox.Ok:
                 self._model.removeRow(index.row(), index.parent())
-                
+
 
 if __name__ == "__main__":
     app = QtWidgets.QApplication(sys.argv)
