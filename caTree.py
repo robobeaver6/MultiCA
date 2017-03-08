@@ -261,9 +261,9 @@ class TreeModel(QtCore.QAbstractItemModel):
         for row in range(rows):
             child_node = Node("Untitled")
             success = parent_node.insertChild(position, child_node)
-            self.layoutChanged.emit()
+            # self.layoutChanged.emit()
         self.endInsertRows()
-        self.dataChanged.emit(parent, parent)
+        # self.dataChanged.emit(parent, parent)
         return success
 
     def removeRows(self, position, rows, parent=QtCore.QModelIndex(), *args, **kwargs):
