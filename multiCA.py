@@ -9,8 +9,6 @@ base, form = uic.loadUiType("MultiCA.ui")
 class wndMain(base, form):
     def __init__(self, parent=None):
         super(base, self).__init__(parent)
-        self._dataMapper = QtWidgets.QDataWidgetMapper()
-
         self.setupUi(self)
 
         self._root_node = caTree.Node("Root Node")
@@ -32,13 +30,24 @@ class wndMain(base, form):
 
         self._model = caTree.TreeModel(self._root_node)
 
-        self.treeView.setModel(self._model)
+        # Proxy Model for sorting
+        """VIEW <------> PROXY MODEL <------> DATA MODEL"""
+        self._proxyModel = QtCore.QSortFilterProxyModel()
+        self._proxyModel.setSourceModel(self._model)
+        self._proxyModel.setDynamicSortFilter(True)
+        self._proxyModel.setFilterCaseSensitivity(QtCore.Qt.CaseInsensitive)
+
+        # self.treeView.setModel(self._proxyModel.sourceModel())
+        self.treeView.setModel(self._proxyModel)
+        # self.treeView.setModel(self._model)
+        self.treeView.expandAll()
+        self.treeView.setSortingEnabled(True)
 
         # Setup selection model for data mapper
         self._selectionModel = self.treeView.selectionModel()
         self._selectionModel.currentChanged.connect(self.selection_changed)
 
-        # self.leName.editingFinished.connect(self.test_function)
+        self._dataMapper = QtWidgets.QDataWidgetMapper()
 
         # Button actions
         self.btnManage.clicked.connect(self.on_click_manage)
@@ -46,12 +55,14 @@ class wndMain(base, form):
         self.btnCreateSub.clicked.connect(self.on_click_create_sub)
 
     def __connect_data_mapper(self):
-        # Setup data maper for GUI editing and updates
+        pass
+        # Setup data mapper for GUI editing and updates
+        self._dataMapper.setModel(self._proxyModel.sourceModel())
+        # self._dataMapper.setModel(self._proxyModel)
         self._dataMapper.setModel(self._model)
         self._dataMapper.addMapping(self.leName, 0)
         self._dataMapper.addMapping(self.leDescription, 1)
         self._dataMapper.addMapping(self.leUID, 2)
-        # self._dataMapper.toFirst()
 
     def __clear_form(self):
         self.leName.setText(None)
@@ -60,42 +71,36 @@ class wndMain(base, form):
 
     @pyqtSlot()
     def on_click_manage(self):
-        self._root_node.save_data('data.json')
-
-    @pyqtSlot()
-    def on_click_create_root(self):
-        # get the index for the root node
-        root_node_index = self._model.createIndex(0, 0, self._root_node)
-        # get the position to add new node to the end of the list
-        root_child_count = self._root_node.child_count()
-        # insert the new node
-        self._model.insertRow(root_child_count, root_node_index)
-        # select created node
-        self.treeView.setCurrentIndex(self._model.index(root_child_count, 0))
-
-    @pyqtSlot()
-    def on_click_create_sub(self):
         sel_model = self.treeView.selectionModel()
         index = sel_model.selectedRows()[0]
         node = self._model.getNode(index)
-        print (node.name())
+        print(node.name())
         self.leName.setText(node.name())
 
     @pyqtSlot()
-    def selection_changed(self):
-        index = self._selectionModel.selectedRows()[0]
-        node = self._model.getNode(index)
-        print(node.name())
-        # self.leName.setText(node.name())
+    def on_click_create_root(self):
+        index = self._selectionModel.currentIndex()
+        index = self._proxyModel.mapToSource(index)
+        while index.isValid():
+            print(index.internalPointer().name)
+            index = index.parent()
+        end_of_list = self._model._rootNode.child_count
+        self._model.insertRow(end_of_list, index)
+
+    @pyqtSlot()
+    def on_click_create_sub(self):
+        index = self._selectionModel.currentIndex()
+        index = self._proxyModel.mapToSource(index)
+        end_of_list = index.internalPointer().child_count
+        self._model.insertRow(end_of_list, index)
 
     @pyqtSlot(QtCore.QModelIndex, QtCore.QModelIndex)
     def selection_changed(self, current, old):
+        current = self._proxyModel.mapToSource(current)
         parent = current.parent()
         self.__connect_data_mapper()
         self._dataMapper.setRootIndex(parent)
         self._dataMapper.setCurrentModelIndex(current)
-        node = self._model.getNode(current)
-        print("Changed: {}".format(node.name()))
 
 
 if __name__ == "__main__":

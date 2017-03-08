@@ -1,5 +1,6 @@
 from caTree import *
 from pytestqt import *
+from PyQt5 import QtCore
 
 
 def test_abstract_item_model(qtmodeltester):
@@ -26,3 +27,6 @@ def test_abstract_item_model(qtmodeltester):
 
     qtmodeltester.check(model)
 
+    proxy_model = QtCore.QSortFilterProxyModel()
+    proxy_model.setSourceModel(model)
+    qtmodeltester.check(proxy_model)
