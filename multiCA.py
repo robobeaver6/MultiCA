@@ -59,6 +59,7 @@ class wndMain(base, form):
         self.treeView.expandAll()
         self.treeView.setSortingEnabled(True)
 
+
         # Setup selection model for data mapper
         self._selectionModel = self.treeView.selectionModel()
         self._selectionModel.currentChanged.connect(self.selection_changed)
@@ -72,38 +73,40 @@ class wndMain(base, form):
         self.btnDelete.clicked.connect(self.on_click_delete)
 
     def __connect_data_mapper(self):
-        pass
-        # Setup data mapper for GUI editing and updates
         self._dataMapper.setModel(self._proxyModel.sourceModel())
-        # self._dataMapper.setModel(self._proxyModel)
-        self._dataMapper.setModel(self._model)
+        # self._dataMapper.setModel(self._model)
         self._dataMapper.addMapping(self.leName, 0)
         self._dataMapper.addMapping(self.leDescription, 1)
         self._dataMapper.addMapping(self.leUID, 2)
+        self._dataMapper.addMapping(self.leCommonName, 3)
+        self._dataMapper.addMapping(self.leOrgUnit, 4)
+        self._dataMapper.addMapping(self.leOrganization, 5)
+        self._dataMapper.addMapping(self.leLocality, 6)
+        self._dataMapper.addMapping(self.leStateOrProvince, 7)
+        self._dataMapper.addMapping(self.leCountry, 8)
+        self._dataMapper.addMapping(self.leEmail, 9)
+        self._dataMapper.addMapping(self.leDomain, 10)
 
     @pyqtSlot(QtCore.QModelIndex, QtCore.QModelIndex)
     def selection_changed(self, current, old):
         current = self._proxyModel.mapToSource(current)
         parent = current.parent()
         self.__connect_data_mapper()
+        self._dataMapper.addMapping(self.leName, 0)
         self._dataMapper.setRootIndex(parent)
         self._dataMapper.setCurrentModelIndex(current)
 
     @pyqtSlot()
     def on_click_manage(self):
-        pass
+        self.treeView.resizeColumnsToContents()
 
     @pyqtSlot()
     def on_click_create_root(self):
-        # win_new_ca = wndNewCA(self, name='untitled', description=None)
-        # win_new_ca.setWindowModality(QtCore.Qt.WindowModal)
-        # win_new_ca.show()
         name, okPressed = QtWidgets.QInputDialog.getText(self, "New CA", "CA Name:", QtWidgets.QLineEdit.Normal, "")
         if okPressed and name != '':
             index = self._selectionModel.currentIndex()
             index = self._proxyModel.mapToSource(index)
             while index.isValid():
-                # print(index.internalPointer().name)
                 index = index.parent()
             end_of_list = self._model._rootNode.child_count
             self._model.insertRow(end_of_list, index, name=name)

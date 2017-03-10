@@ -5,21 +5,27 @@ import json
 
 class Node (object):
     def __init__(self, name, parent=None):
+        # Tree Specific Variables
         self._name = name
-        self._description = ''
-        self._children = []
         self._parent = parent
+        self._children = []
+        # Certificate Variables
+        self._description = ''
         self._uid = uuid.uuid4()
-        self._commonName = "Test"
-        self._organization = None
-        self._locality = None
-        self._stateOrProvince = None
-        self._country = None
-        self._privateKey = None
-        self._certificate = None
-        self._certSignReq = None
-        self._dateStart = None
-        self._dateEnd = None
+        self._common_name = ''
+        self._organization_name = ''
+        self._locality_name = ''
+        self._state_or_province_name = ''
+        self._country_name = ''
+        self._email_address = ''
+        self._domain_component = ''
+        self._organizational_unit_name = ''
+        self._private_key = ''
+        self._certificate = ''
+        self._cert_sign_req = ''
+        self._date_start = None
+        self._date_end = None
+        self._basic_constraints = dict()
 
         if parent is not None:
             parent.addChild(self)
@@ -44,9 +50,6 @@ class Node (object):
             child = self._children.pop(position)
             child._parent = None
             return False
-    @property
-    def name(self):
-        return self._name
 
     def child(self, row):
         # print("{} Row:{}  :  Children{}".format(self._name, row, len(self._children)-1))
@@ -63,100 +66,141 @@ class Node (object):
 
     def row(self):
         if self._parent is not None:
-            # print (self._parent._children.index(self))
             return self._parent._children.index(self)
 
-    def save_data(self, filename):
-        with open(filename, 'w') as f:
-            json.dumps(self)
+    # Setters and Getters
+    @property
+    def name(self):
+        return self._name
 
-    # setters
-    def setName(self, value):
+    @name.setter
+    def name(self, value):
         self._name = value
 
-    def setUID(self, value):
-        self._uid = value
-
-    def setDescription(self, value):
-        self._description = value
-
-    def setCommonName(self, value):
-        self._commonName = value
-
-    def setOrganization(self, value):
-        self._organization = value
-
-    def setLocality(self, value):
-        self._locality = value
-
-    def setStateOrProvince(self, value):
-        self._stateOrProvince = value
-
-    def setCountry(self, value):
-        self._country = value
-
-    def setPrivateKey(self, value):
-        self._privateKey = value
-
-    def setCertificate(self, value):
-        self._certificate = value
-
-    def setCertSignReq(self, value):
-        self._certSignReq = value
-
-    def setDateStart(self, value):
-        self._dateStart = value
-
-    def setDateEnd(self, value):
-        self._dateEnd = value
-
-    # getters
-    def get_root(self):
-        return str(self._root)
-
-    def getName(self):
-        return str(self._name)
-
-    def getUID(self):
+    @property
+    def uid(self):
         return str(self._uid)
 
-    def getDescription(self):
+    @uid.setter
+    def uid(self, value):
+        self._uid = value
+
+    @property
+    def description(self):
         return str(self._description)
 
-    def getCommonName(self):
-        return self._commonName
+    @description.setter
+    def description(self, value):
+        self._description = value
 
-    def getOrganization(self):
-        return self._organization
+    @property
+    def common_name(self):
+        return self._common_name
 
-    def getLocality(self):
-        return self._locality
+    @common_name.setter
+    def common_name(self, value):
+        self._common_name = value
 
-    def getStateOrProvince(self):
-        return self._stateOrProvince
+    @property
+    def organizational_unit_name(self):
+        return self._organizational_unit_name
 
-    def getCountry(self):
-        return self._country
+    @organizational_unit_name.setter
+    def organizational_unit_name(self, value):
+        self._organizational_unit_name = value
 
-    def getPrivateKey(self):
-        return self._privateKey
+    @property
+    def organization_name(self):
+        return self._organization_name
 
-    def getCertificate(self):
+    @organization_name.setter
+    def organization_name(self, value):
+        self._organization_name = value
+
+    @property
+    def locality_name(self):
+        return self._locality_name
+
+    @locality_name.setter
+    def locality_name(self, value):
+        self._locality_name = value
+
+    @property
+    def state_or_province_name(self):
+        return self._state_or_province_name
+
+    @state_or_province_name.setter
+    def state_or_province_name(self, value):
+        self._state_or_province_name = value
+
+    @property
+    def country_name(self):
+        return self._country_name
+
+    @country_name.setter
+    def country_name(self, value):
+        self._country_name = value
+
+    @property
+    def email_address(self):
+        return self._email_address
+
+    @email_address.setter
+    def email_address(self, value):
+        self._email_address = value
+
+    @property
+    def domain_component(self):
+        return self._domain_component
+
+    @domain_component.setter
+    def domain_component(self, value):
+        self._domain_component = value
+
+    @property
+    def private_key(self):
+        return self._private_key
+
+    @private_key.setter
+    def private_key(self, value):
+        self._private_key = value
+
+    @property
+    def certificate(self):
         return self._certificate
 
-    def getCertSignReq(self):
-        return self._certSignReq
+    @certificate.setter
+    def certificate(self, value):
+        self._certificate = value
 
-    def getDateStart(self):
-        return self._dateStart
+    @property
+    def cert_sign_req(self):
+        return self._cert_sign_req
 
-    def getDateEnd(self):
-        return self._dateEnd
+    @cert_sign_req.setter
+    def cert_sign_req(self, value):
+        self._cert_sign_req = value
+
+    @property
+    def date_start(self):
+        return self._date_start
+
+    @date_start.setter
+    def date_start(self, value):
+        self._date_start = value
+
+    @property
+    def date_end(self):
+        return self._date_end
+
+    @date_end.setter
+    def date_end(self, value):
+        self._date_end = value
 
 
 class TreeModel(QtCore.QAbstractItemModel):
     def __init__(self, root, parent=None):
-        super(TreeModel,self).__init__(parent)
+        super(TreeModel, self).__init__(parent)
         self._rootNode = root
 
     def rowCount(self, parent=QtCore.QModelIndex(), *args, **kwargs):
@@ -180,31 +224,66 @@ class TreeModel(QtCore.QAbstractItemModel):
         # print ("Role = {} : Column = {} : Row = {}".format(role, index.column(), index.row()))
         if role == QtCore.Qt.DisplayRole or role == QtCore.Qt.EditRole:
             if index.column() == 0:
-                # print ("Col0 = {}".format(node.name()))
-                # return node.name()
                 return node.name
             if index.column() == 1:
-                # print("Col1 = {}".format(node.name()))
-                return node.getDescription()
-                # return str(index + node.parent)
+                return node.description
             if index.column() == 2:
-                # print("Col1 = {}".format(node.name()))
-                return node.getUID()
-                # return str(index + node.parent)
+                return node.uid
+            if index.column() == 3:
+                return node.common_name
+            if index.column() == 4:
+                return node.organizational_unit_name
+            if index.column() == 5:
+                return node.organization_name
+            if index.column() == 6:
+                return node.locality_name
+            if index.column() == 7:
+                return node.state_or_province_name
+            if index.column() == 8:
+                return node.country_name
+            if index.column() == 9:
+                return node.email_address
+            if index.column() == 10:
+                return node.domain_component
 
     def setData(self, index, value, role=QtCore.Qt.EditRole):
         if index.isValid():
             node = index.internalPointer()
             if role == QtCore.Qt.EditRole:
                 if index.column() == 0:
-                    node.setName(value)
+                    node.name = value
                     self.dataChanged.emit(index, index)
                 if index.column() == 1:
-                    node.setDescription(value)
+                    node.description = value
                     self.dataChanged.emit(index, index)
                 if index.column() == 2:
-                    node.setUID(value)
+                    node.uid = value
                     self.dataChanged.emit(index, index)
+                if index.column() == 3:
+                    node.common_name = value
+                    self.dataChanged.emit(index, index)
+                if index.column() == 4:
+                    node.organizational_unit_name = value
+                    self.dataChanged.emit(index, index)
+                if index.column() == 5:
+                    node.organization_name = value
+                    self.dataChanged.emit(index, index)
+                if index.column() == 6:
+                    node.locality_name = value
+                    self.dataChanged.emit(index, index)
+                if index.column() == 7:
+                    node.state_or_province_name = value
+                    self.dataChanged.emit(index, index)
+                if index.column() == 8:
+                    node.country_name = value
+                    self.dataChanged.emit(index, index)
+                if index.column() == 9:
+                    node.email_address = value
+                    self.dataChanged.emit(index, index)
+                if index.column() == 10:
+                    node.domain_component = value
+                    self.dataChanged.emit(index, index)
+
                 return True
         return False
 
@@ -256,6 +335,7 @@ class TreeModel(QtCore.QAbstractItemModel):
         return self.insertRows(row, 1, parent, **kwargs)
 
     def insertRows(self, position, rows, parent=QtCore.QModelIndex(), *args, **kwargs):
+        success = None
         parent_node = self.getNode(parent)
         self.beginInsertRows(parent, position, position+rows-1)
         for row in range(rows):
@@ -273,6 +353,7 @@ class TreeModel(QtCore.QAbstractItemModel):
         return self.removeRows(row, 1, parent, **kwargs)
 
     def removeRows(self, position, rows, parent=QtCore.QModelIndex(), *args, **kwargs):
+        success = None
         parent_node = self.getNode(parent)
         self.beginRemoveRows(parent, position, position + rows - 1)
         for row in range(rows):
