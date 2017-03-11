@@ -10,22 +10,23 @@ class Node (object):
         self._parent = parent
         self._children = []
         # Certificate Variables
-        self._description = ''
+        self._description = None
         self._uid = uuid.uuid4()
-        self._common_name = ''
-        self._organization_name = ''
-        self._locality_name = ''
-        self._state_or_province_name = ''
-        self._country_name = ''
-        self._email_address = ''
-        self._domain_component = ''
-        self._organizational_unit_name = ''
-        self._private_key = ''
-        self._certificate = ''
-        self._cert_sign_req = ''
+        self._common_name = None
+        self._organization_name = None
+        self._locality_name = None
+        self._state_or_province_name = None
+        self._country_name = None
+        self._email_address = None
+        self._domain_component = None
+        self._organizational_unit_name = None
+        self._private_key = None
+        self._certificate = None
+        self._cert_sign_req = None
         self._date_start = None
         self._date_end = None
         self._basic_constraints = dict()
+        self._subject_alt_names = ['Test 1', 'Test 2']
 
         if parent is not None:
             parent.addChild(self)
@@ -87,7 +88,7 @@ class Node (object):
 
     @property
     def description(self):
-        return str(self._description)
+        return self._description
 
     @description.setter
     def description(self, value):
@@ -197,6 +198,20 @@ class Node (object):
     def date_end(self, value):
         self._date_end = value
 
+    @property
+    def subject_alt_names(self):
+        return self._subject_alt_names
+
+    @subject_alt_names.setter
+    def subject_alt_names(self, value):
+        self._subject_alt_names = value
+
+    def subject_alt_names_add(self, value):
+        self._subject_alt_names.append(value)
+
+    def subject_alt_names_del(self, row):
+        del self._subject_alt_names[row]
+
 
 class TreeModel(QtCore.QAbstractItemModel):
     def __init__(self, root, parent=None):
@@ -214,8 +229,12 @@ class TreeModel(QtCore.QAbstractItemModel):
 
         return parent_node.child_count
 
+    @property
+    def root(self):
+        return self._rootNode
+
     def columnCount(self, parent=QtCore.QModelIndex(), *args, **kwargs):
-        return 3
+        return 2
 
     def data(self, index, role=None):
         if not index.isValid():
@@ -245,6 +264,9 @@ class TreeModel(QtCore.QAbstractItemModel):
                 return node.email_address
             if index.column() == 10:
                 return node.domain_component
+            # if index.column() == 11:
+            #     return node.subject_alt_names
+            #     return 'test'
 
     def setData(self, index, value, role=QtCore.Qt.EditRole):
         if index.isValid():
@@ -283,6 +305,9 @@ class TreeModel(QtCore.QAbstractItemModel):
                 if index.column() == 10:
                     node.domain_component = value
                     self.dataChanged.emit(index, index)
+                # if index.column() == 11:
+                #     node.subject_alt_names = value
+                #     self.dataChanged.emit(index, index)
 
                 return True
         return False
@@ -344,9 +369,7 @@ class TreeModel(QtCore.QAbstractItemModel):
             else:
                 child_node = Node('Untitled')
             success = parent_node.insertChild(position, child_node)
-            # self.layoutChanged.emit()
         self.endInsertRows()
-        # self.dataChanged.emit(parent, parent)
         return success
 
     def removeRow(self, row, parent=None, *args, **kwargs):

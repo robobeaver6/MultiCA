@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>988</width>
-    <height>836</height>
+    <width>1040</width>
+    <height>849</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -125,13 +125,13 @@
           <bool>true</bool>
          </attribute>
          <attribute name="headerDefaultSectionSize">
-          <number>200</number>
+          <number>100</number>
          </attribute>
          <attribute name="headerMinimumSectionSize">
           <number>100</number>
          </attribute>
          <attribute name="headerStretchLastSection">
-          <bool>false</bool>
+          <bool>true</bool>
          </attribute>
         </widget>
        </item>
@@ -190,6 +190,16 @@
          <item row="3" column="1">
           <widget class="QLineEdit" name="leCommonName"/>
          </item>
+         <item row="4" column="0">
+          <widget class="QLabel" name="label_13">
+           <property name="text">
+            <string>Organisational Unit OU=</string>
+           </property>
+          </widget>
+         </item>
+         <item row="4" column="1">
+          <widget class="QLineEdit" name="leOrgUnit"/>
+         </item>
          <item row="5" column="0">
           <widget class="QLabel" name="label_10">
            <property name="text">
@@ -220,46 +230,15 @@
          <item row="7" column="1">
           <widget class="QLineEdit" name="leStateOrProvince"/>
          </item>
+         <item row="8" column="0">
+          <widget class="QLabel" name="label_9">
+           <property name="text">
+            <string>Country C=</string>
+           </property>
+          </widget>
+         </item>
          <item row="8" column="1">
           <widget class="QLineEdit" name="leCountry"/>
-         </item>
-         <item row="14" column="0">
-          <widget class="QLabel" name="label_7">
-           <property name="text">
-            <string>Start Date</string>
-           </property>
-          </widget>
-         </item>
-         <item row="14" column="1">
-          <widget class="QDateTimeEdit" name="dtStart">
-           <property name="calendarPopup">
-            <bool>true</bool>
-           </property>
-          </widget>
-         </item>
-         <item row="15" column="0">
-          <widget class="QLabel" name="label_8">
-           <property name="text">
-            <string>End Date</string>
-           </property>
-          </widget>
-         </item>
-         <item row="15" column="1">
-          <widget class="QDateTimeEdit" name="dtEnd">
-           <property name="calendarPopup">
-            <bool>true</bool>
-           </property>
-          </widget>
-         </item>
-         <item row="16" column="0">
-          <widget class="QCheckBox" name="checkBox">
-           <property name="text">
-            <string>CheckBox</string>
-           </property>
-          </widget>
-         </item>
-         <item row="9" column="1">
-          <widget class="QLineEdit" name="leEmail"/>
          </item>
          <item row="9" column="0">
           <widget class="QLabel" name="label_12">
@@ -268,25 +247,18 @@
            </property>
           </widget>
          </item>
-         <item row="8" column="0">
-          <widget class="QLabel" name="label_9">
+         <item row="9" column="1">
+          <widget class="QLineEdit" name="leEmail"/>
+         </item>
+         <item row="10" column="0">
+          <widget class="QLabel" name="label_15">
            <property name="text">
-            <string>Country C=</string>
+            <string>Domain</string>
            </property>
           </widget>
          </item>
-         <item row="4" column="1">
-          <widget class="QLineEdit" name="leOrgUnit"/>
-         </item>
-         <item row="4" column="0">
-          <widget class="QLabel" name="label_13">
-           <property name="text">
-            <string>Organisational Unit</string>
-           </property>
-          </widget>
-         </item>
-         <item row="11" column="1">
-          <widget class="QListView" name="listView"/>
+         <item row="10" column="1">
+          <widget class="QLineEdit" name="leDomain"/>
          </item>
          <item row="11" column="0">
           <widget class="QLabel" name="label_14">
@@ -295,7 +267,14 @@
            </property>
           </widget>
          </item>
-         <item row="12" column="1">
+         <item row="13" column="0">
+          <widget class="QLabel" name="label_3">
+           <property name="text">
+            <string>Certificate</string>
+           </property>
+          </widget>
+         </item>
+         <item row="13" column="1">
           <widget class="QPlainTextEdit" name="teCertificate">
            <property name="enabled">
             <bool>true</bool>
@@ -308,21 +287,111 @@
            </property>
           </widget>
          </item>
-         <item row="12" column="0">
-          <widget class="QLabel" name="label_3">
+         <item row="15" column="0">
+          <widget class="QLabel" name="label_7">
            <property name="text">
-            <string>Certificate</string>
+            <string>Start Date</string>
            </property>
           </widget>
          </item>
-         <item row="10" column="1">
-          <widget class="QLineEdit" name="leDomain"/>
-         </item>
-         <item row="10" column="0">
-          <widget class="QLabel" name="label_15">
-           <property name="text">
-            <string>Domain</string>
+         <item row="15" column="1">
+          <widget class="QDateTimeEdit" name="dtStart">
+           <property name="calendarPopup">
+            <bool>true</bool>
            </property>
+          </widget>
+         </item>
+         <item row="16" column="0">
+          <widget class="QLabel" name="label_8">
+           <property name="text">
+            <string>End Date</string>
+           </property>
+          </widget>
+         </item>
+         <item row="16" column="1">
+          <widget class="QDateTimeEdit" name="dtEnd">
+           <property name="calendarPopup">
+            <bool>true</bool>
+           </property>
+          </widget>
+         </item>
+         <item row="17" column="1">
+          <widget class="QPushButton" name="btnGenerate">
+           <property name="text">
+            <string>Generate Key and Certificate</string>
+           </property>
+          </widget>
+         </item>
+         <item row="11" column="1">
+          <widget class="QFrame" name="frame_3">
+           <property name="frameShape">
+            <enum>QFrame::StyledPanel</enum>
+           </property>
+           <property name="frameShadow">
+            <enum>QFrame::Raised</enum>
+           </property>
+           <layout class="QHBoxLayout" name="horizontalLayout_3">
+            <property name="leftMargin">
+             <number>0</number>
+            </property>
+            <property name="topMargin">
+             <number>0</number>
+            </property>
+            <property name="rightMargin">
+             <number>0</number>
+            </property>
+            <property name="bottomMargin">
+             <number>0</number>
+            </property>
+            <item>
+             <widget class="QListView" name="lstSubjectAltName">
+              <property name="maximumSize">
+               <size>
+                <width>16777215</width>
+                <height>100</height>
+               </size>
+              </property>
+             </widget>
+            </item>
+            <item>
+             <layout class="QVBoxLayout" name="verticalLayout_2">
+              <property name="leftMargin">
+               <number>0</number>
+              </property>
+              <property name="topMargin">
+               <number>10</number>
+              </property>
+              <property name="rightMargin">
+               <number>0</number>
+              </property>
+              <property name="bottomMargin">
+               <number>10</number>
+              </property>
+              <item>
+               <widget class="QToolButton" name="btnAltNameAdd">
+                <property name="text">
+                 <string>+</string>
+                </property>
+                <property name="icon">
+                 <iconset>
+                  <normaloff>../../Downloads/Plus-48.png</normaloff>../../Downloads/Plus-48.png</iconset>
+                </property>
+               </widget>
+              </item>
+              <item>
+               <widget class="QToolButton" name="btnAltNameDel">
+                <property name="text">
+                 <string>-</string>
+                </property>
+                <property name="icon">
+                 <iconset>
+                  <normaloff>../../Downloads/Minus-48.png</normaloff>../../Downloads/Minus-48.png</iconset>
+                </property>
+               </widget>
+              </item>
+             </layout>
+            </item>
+           </layout>
           </widget>
          </item>
         </layout>
@@ -337,7 +406,7 @@
     <rect>
      <x>0</x>
      <y>0</y>
-     <width>988</width>
+     <width>1040</width>
      <height>21</height>
     </rect>
    </property>

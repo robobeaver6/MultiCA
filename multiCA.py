@@ -30,23 +30,24 @@ class wndMain(base, form):
         self.setupUi(self)
 
         self._root_node = caTree.Node("Root Node")
-        childNode0 = caTree.Node("CA0", self._root_node)
-        childNode1 = caTree.Node("CA1", self._root_node)
-        childNode2 = caTree.Node("CA1-A", childNode1)
-        childNode3 = caTree.Node("CA2", self._root_node)
-        childNode4 = caTree.Node("CA2-A", childNode3)
-        childNode5 = caTree.Node("CA2-B", childNode3)
-        childNode6 = caTree.Node("CA3", self._root_node)
-        childNode7 = caTree.Node("CA3-A", childNode6)
-        childNode8 = caTree.Node("CA3-B", childNode6)
-        childNode9 = caTree.Node("CA3-C", childNode6)
-        childNode10 = caTree.Node("CA4", self._root_node)
-        childNode11 = caTree.Node("CA4-A", childNode10)
-        childNode12 = caTree.Node("CA4-B", childNode10)
-        childNode13 = caTree.Node("CA4-C", childNode10)
-        childNode14 = caTree.Node("CA4-D", childNode10)
+        child_node0 = caTree.Node("CA0", self._root_node)
+        child_node1 = caTree.Node("CA1", self._root_node)
+        child_node2 = caTree.Node("CA1-A", child_node1)
+        child_node3 = caTree.Node("CA2", self._root_node)
+        child_node4 = caTree.Node("CA2-A", child_node3)
+        child_node5 = caTree.Node("CA2-B", child_node3)
+        child_node6 = caTree.Node("CA3", self._root_node)
+        child_node7 = caTree.Node("CA3-A", child_node6)
+        child_node8 = caTree.Node("CA3-B", child_node6)
+        child_node9 = caTree.Node("CA3-C", child_node6)
+        child_node10 = caTree.Node("CA4", self._root_node)
+        child_node11 = caTree.Node("CA4-A", child_node10)
+        child_node12 = caTree.Node("CA4-B", child_node10)
+        child_node13 = caTree.Node("CA4-C", child_node10)
+        child_node14 = caTree.Node("CA4-D", child_node10)
 
         self._model = caTree.TreeModel(self._root_node)
+        self._model_list = QtCore.QStringListModel()
 
         # Proxy Model for sorting
         """VIEW <------> PROXY MODEL <------> DATA MODEL"""
@@ -59,10 +60,10 @@ class wndMain(base, form):
         self.treeView.expandAll()
         self.treeView.setSortingEnabled(True)
 
-
         # Setup selection model for data mapper
         self._selectionModel = self.treeView.selectionModel()
         self._selectionModel.currentChanged.connect(self.selection_changed)
+        self._selectionModel_list = self.lstSubjectAltName.selectionModel()
 
         self._dataMapper = QtWidgets.QDataWidgetMapper()
 
@@ -71,10 +72,16 @@ class wndMain(base, form):
         self.btnCreateRoot.clicked.connect(self.on_click_create_root)
         self.btnCreateSub.clicked.connect(self.on_click_create_sub)
         self.btnDelete.clicked.connect(self.on_click_delete)
+        self.btnAltNameAdd.clicked.connect(self.on_click_alt_name_add)
+        self.btnAltNameDel.clicked.connect(self.on_click_alt_name_del)
 
-    def __connect_data_mapper(self):
+
+    @pyqtSlot(QtCore.QModelIndex, QtCore.QModelIndex)
+    def selection_changed(self, current, old):
+        current = self._proxyModel.mapToSource(current)
+        parent = current.parent()
+        # Connect up dataMapper to List boxes
         self._dataMapper.setModel(self._proxyModel.sourceModel())
-        # self._dataMapper.setModel(self._model)
         self._dataMapper.addMapping(self.leName, 0)
         self._dataMapper.addMapping(self.leDescription, 1)
         self._dataMapper.addMapping(self.leUID, 2)
@@ -86,19 +93,36 @@ class wndMain(base, form):
         self._dataMapper.addMapping(self.leCountry, 8)
         self._dataMapper.addMapping(self.leEmail, 9)
         self._dataMapper.addMapping(self.leDomain, 10)
-
-    @pyqtSlot(QtCore.QModelIndex, QtCore.QModelIndex)
-    def selection_changed(self, current, old):
-        current = self._proxyModel.mapToSource(current)
-        parent = current.parent()
-        self.__connect_data_mapper()
-        self._dataMapper.addMapping(self.leName, 0)
         self._dataMapper.setRootIndex(parent)
         self._dataMapper.setCurrentModelIndex(current)
+        # Setup Subject Alt Name list view
+        self.lstSubjectAltName.setModel(self._model_list)
+        self._model_list.setStringList(current.internalPointer().subject_alt_names)
+        self._model_list.dataChanged.connect(lambda: self._subject_alt_names_data_changed(current))
+
+    @pyqtSlot(QtCore.QModelIndex, QtCore.QModelIndex)
+    def selection_changed_list(self, current, old):
+        current = self._proxyModel.mapToSource(current)
+        parent = current.parent()
+        print('List Selection Changed', current.row())
+
+    @pyqtSlot()
+    def _subject_alt_names_data_changed(self, current, *args, **kwargs):
+        current.internalPointer().subject_alt_names = self._model_list.stringList()
+        print(' Data Changed ', current.internalPointer().name, args, kwargs)
+
+
+
 
     @pyqtSlot()
     def on_click_manage(self):
-        self.treeView.resizeColumnsToContents()
+        # self.treeView.resizeColumnsToContents()
+        file = QtCore.QFile("save.txt")
+        file.open(QtCore.QIODevice.WriteOnly)
+        # open data stream
+        out = QtCore.QDataStream(file)
+        # recursively write model item into the datastream
+        self.save_item(self._model.root, out)
 
     @pyqtSlot()
     def on_click_create_root(self):
@@ -138,6 +162,42 @@ class wndMain(base, form):
             return_val = msg.exec()
             if return_val == QtWidgets.QMessageBox.Ok:
                 self._model.removeRow(index.row(), index.parent())
+
+    @pyqtSlot()
+    def on_click_alt_name_add(self):
+        index = self._selectionModel.currentIndex()
+        index = self._proxyModel.mapToSource(index)
+        node = index.internalPointer()
+        if index.isValid():
+            name, okPressed = QtWidgets.QInputDialog.getText(self, "Subject Alternate Name", "New Alt Name:", QtWidgets.QLineEdit.Normal, "")
+            if okPressed and name != '':
+                # self._model_list.beginInsertRows(index.parent(), index.row(), index.row()+1)
+                # self._model_list.insertRows(index.row()+1, 1)
+                # self._model_list.setData(index.sibling(index.row()+1, 0), name)
+                # self._model_list.endInsertRows()
+                node.subject_alt_names_add(name)
+                self._model_list.setStringList(node.subject_alt_names)
+
+
+    @pyqtSlot()
+    def on_click_alt_name_del(self):
+        index = self._selectionModel.currentIndex()
+        index = self._proxyModel.mapToSource(index)
+        node = self._selectionModel.internalPointer()
+        print('Delete Subject Alt Name: ')
+        node.subject_alt_names_del(index.row())
+        self._model_list.setStringList(node.subject_alt_names)
+
+    def save_data(self, item, out):
+        # TODO Write data to file
+        for i in range(0, item.rowCount()):
+            child = item.child(i)
+            child.write(out)
+            self.save_item(child, out)
+
+    def load_data(self):
+        # TODO Restore Data
+        pass
 
 
 if __name__ == "__main__":
