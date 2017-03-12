@@ -1,6 +1,5 @@
 from PyQt5 import QtCore, QtWidgets, QtGui
 import uuid
-import json
 
 
 class Node (object):
@@ -10,7 +9,7 @@ class Node (object):
         self._parent = parent
         self._children = []
         # Certificate Variables
-        self._description = None
+        self._description = ''
         self._uid = uuid.uuid4()
         self._common_name = None
         self._organization_name = None
@@ -27,6 +26,16 @@ class Node (object):
         self._date_end = None
         self._basic_constraints = dict()
         self._subject_alt_names = []
+        # Basic Constraints
+        self._digital_signature = True,
+        self._content_commitment = True,
+        self._key_encipherment = False,
+        self._data_encipherment = False,
+        self._key_agreement = False,
+        self._key_cert_sign = True,
+        self._crl_sign = True,
+        self._encipher_only = False,
+        self._decipher_only = False
 
         if parent is not None:
             parent.addChild(self)
@@ -364,6 +373,13 @@ class TreeModel(QtCore.QAbstractItemModel):
         for row in range(rows):
             if 'name' in kwargs.keys():
                 child_node = Node(kwargs['name'])
+                child_node.organizational_unit_name = parent_node.organizational_unit_name
+                child_node.organization_name = parent_node.organization_name
+                child_node.locality_name = parent_node.locality_name
+                child_node.state_or_province_name = parent_node.state_or_province_name
+                child_node.country_name = parent_node.country_name
+                child_node.email_address = parent_node.email_address
+                child_node.domain_component = parent_node.domain_component
             else:
                 child_node = Node('Untitled')
             success = parent_node.insertChild(position, child_node)

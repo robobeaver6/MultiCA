@@ -1,9 +1,11 @@
 from PyQt5 import uic, QtWidgets, QtCore, QtGui
 from PyQt5.QtCore import QObject, pyqtSlot, pyqtSignal
+from cryptography.hazmat.primitives.asymmetric import rsa, ec
 import sys
 import os
 import caTree
 import pickle
+import crypto
 
 base, form = uic.loadUiType("MultiCA.ui")
 baseNewCA, formNewCA = uic.loadUiType("NewCA_Dialog.ui")
@@ -65,12 +67,20 @@ class wndMain(base, form):
         self.btnDelete.clicked.connect(self.on_click_delete)
         self.btnAltNameAdd.clicked.connect(self.on_click_alt_name_add)
         self.btnAltNameDel.clicked.connect(self.on_click_alt_name_del)
+        self.btnGenerate.clicked.connect(self.on_click_generate_cert)
 
+        # Menu Item Clicks
         self.actionSave.triggered.connect(self.save_data)
+
+    def current_node(self):
+        index = self._selectionModel.currentIndex()
+        index = self._proxyModel.mapToSource(index)
+        node = index.internalPointer()
+        return node
 
     @pyqtSlot(QtCore.QModelIndex, QtCore.QModelIndex)
     def selection_changed(self, current, old):
-        print('selection Changed', current, old)
+        # print('selection Changed', current, old)
         current = self._proxyModel.mapToSource(current)
         parent = current.parent()
         # Connect up dataMapper to List boxes
@@ -96,22 +106,9 @@ class wndMain(base, form):
             self._model_list.setStringList(current.internalPointer().subject_alt_names)
         self._model_list.dataChanged.connect(lambda: self._subject_alt_names_data_changed(current))
 
-    @pyqtSlot(QtCore.QModelIndex, QtCore.QModelIndex)
-    def selection_changed_list(self, current, old):
-        current = self._proxyModel.mapToSource(current)
-        parent = current.parent()
-        print('List Selection Changed', current.row())
-
     @pyqtSlot()
     def _subject_alt_names_data_changed(self, current):
         current.internalPointer().subject_alt_names = self._model_list.stringList()
-        print(' Data Changed ', current.internalPointer().name)
-
-    @pyqtSlot()
-    def on_click_manage(self):
-        # self.treeView.resizeColumnsToContents()
-        pass
-        self.clear_form()
 
     def clear_form(self):
         self.treeView.clearSelection()
@@ -140,7 +137,6 @@ class wndMain(base, form):
             end_of_list = self._model._rootNode.child_count
             self._model.insertRow(end_of_list, index, name=name)
 
-
     @pyqtSlot()
     def on_click_create_sub(self):
         index = self._selectionModel.currentIndex()
@@ -151,6 +147,12 @@ class wndMain(base, form):
             if okPressed and name != '':
                 end_of_list = index.internalPointer().child_count
                 self._model.insertRow(end_of_list, index, name=name)
+
+
+    @pyqtSlot()
+    def on_click_manage(self):
+        self.treeView.resizeColumnsToContents()
+
 
     def on_click_delete(self):
         index = self._selectionModel.currentIndex()
@@ -182,26 +184,35 @@ class wndMain(base, form):
                 node.subject_alt_names_add(name)
                 self._model_list.setStringList(node.subject_alt_names)
 
-
     @pyqtSlot()
     def on_click_alt_name_del(self):
         index = self._selectionModel.currentIndex()
         index = self._proxyModel.mapToSource(index)
         node = index.internalPointer()
         if self.lstSubjectAltName.currentIndex().isValid():
-            print('Delete Subject Alt Name: ')
+            print('Delete Subject Alt Name: ', node.name)
             node.subject_alt_names_del(self.lstSubjectAltName.currentIndex().row())
             self._model_list.setStringList(node.subject_alt_names)
 
     @pyqtSlot()
+    def on_click_generate_cert(self):
+        node = self.current_node()
+        node.private_key = crypto.create_private_key(ec.SECP256R1, 'PassPhrase')
+        if node.parent == self._root_node:
+            node.certificate = crypto.create_root_certificate(node, node.private_key)
+        else:
+            node.cert_sign_req = crypto.create_cert_sign_req(node, node.private_key)
+
+
+        print(node.private_key)
+
+    @pyqtSlot()
     def save_data(self):
-        # TODO Write data to file
         with open('data.pkl', 'wb') as file_out:
             pickle.dump(self._root_node, file_out, protocol=pickle.HIGHEST_PROTOCOL)
             print('Data Saved')
 
     def load_data(self):
-        # TODO Restore Data
         with open('data.pkl', 'rb') as file_in:
             self._root_node = pickle.load(file_in)
             print('Data Loaded')
