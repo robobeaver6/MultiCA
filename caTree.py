@@ -26,12 +26,10 @@ class Node (object):
         self._date_start = None
         self._date_end = None
         self._basic_constraints = dict()
-        self._subject_alt_names = ['Test 1', 'Test 2']
+        self._subject_alt_names = []
 
         if parent is not None:
             parent.addChild(self)
-
-        # print ("Created  {} : {}".format(self._name, self._uid))
 
     def addChild(self, child):
         self._children.append(child)

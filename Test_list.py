@@ -18,6 +18,7 @@ def main():
         listView.setModel(model)
         model.dataChanged.connect(edit_finished)
         listView.append('123')
+        listView.currentIndex()
         print(model)
         sys.exit(app.exec_())
 
