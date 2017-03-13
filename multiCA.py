@@ -96,6 +96,7 @@ class wndMain(base, form):
         self._dataMapper.addMapping(self.leCountry, 8)
         self._dataMapper.addMapping(self.leEmail, 9)
         self._dataMapper.addMapping(self.leDomain, 10)
+        self._dataMapper.addMapping(self.CA, 11)
         
         self._dataMapper.setRootIndex(parent)
         self._dataMapper.setCurrentModelIndex(current)

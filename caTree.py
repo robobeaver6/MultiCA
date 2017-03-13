@@ -24,18 +24,19 @@ class Node (object):
         self._cert_sign_req = None
         self._date_start = None
         self._date_end = None
-        self._basic_constraints = dict()
+        
         self._subject_alt_names = []
-        # Basic Constraints
-        self._digital_signature = True,
-        self._content_commitment = True,
-        self._key_encipherment = False,
-        self._data_encipherment = False,
-        self._key_agreement = False,
-        self._key_cert_sign = True,
-        self._crl_sign = True,
-        self._encipher_only = False,
-        self._decipher_only = False
+        self._key_usage_ca = False
+        self._key_usage_path_length = None
+        self._basic_constraints = {'digital_signature': True,
+                                    'content_commitment': True,
+                                    'key_encipherment': False,
+                                    'data_encipherment': False,
+                                    'key_agreement': False,
+                                    'key_cert_sign': True,
+                                    'crl_sign': True,
+                                    'encipher_only': False,
+                                    'decipher_only': False}
 
         if parent is not None:
             parent.addChild(self)
@@ -219,6 +220,17 @@ class Node (object):
     def subject_alt_names_del(self, row):
         del self._subject_alt_names[row]
 
+    @property
+    def key_usage_ca(self):
+        if self._key_usage_ca:
+            return self._key_usage_ca
+        else:
+            return False
+
+    @key_usage_ca.setter
+    def key_usage_ca(self, value):
+        self._key_usage_ca = value
+
 
 class TreeModel(QtCore.QAbstractItemModel):
     def __init__(self, root, parent=None):
@@ -271,9 +283,8 @@ class TreeModel(QtCore.QAbstractItemModel):
                 return node.email_address
             if index.column() == 10:
                 return node.domain_component
-            # if index.column() == 11:
-            #     return node.subject_alt_names
-            #     return 'test'
+            if index.column() == 11:
+                return node.key_usage_ca
 
     def setData(self, index, value, role=QtCore.Qt.EditRole):
         if index.isValid():
@@ -312,9 +323,9 @@ class TreeModel(QtCore.QAbstractItemModel):
                 if index.column() == 10:
                     node.domain_component = value
                     self.dataChanged.emit(index, index)
-                # if index.column() == 11:
-                #     node.subject_alt_names = value
-                #     self.dataChanged.emit(index, index)
+                if index.column() == 11:
+                    node.key_usage_ca = value
+                    self.dataChanged.emit(index, index)
 
                 return True
         return False
