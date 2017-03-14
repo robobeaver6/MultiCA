@@ -26,17 +26,17 @@ class Node (object):
         self._date_end = None
         
         self._subject_alt_names = []
-        self._key_usage_ca = False
-        self._key_usage_path_length = None
-        self._basic_constraints = {'digital_signature': True,
-                                    'content_commitment': True,
-                                    'key_encipherment': False,
-                                    'data_encipherment': False,
-                                    'key_agreement': False,
-                                    'key_cert_sign': True,
-                                    'crl_sign': True,
-                                    'encipher_only': False,
-                                    'decipher_only': False}
+        self._basic_constraint_ca = False
+        self._basic_constraint_path_length = None
+        self._key_usage = {'digital_signature': True,
+                           'content_commitment': True,
+                           'key_encipherment': False,
+                           'data_encipherment': False,
+                           'key_agreement': False,
+                           'key_cert_sign': True,
+                           'crl_sign': True,
+                           'encipher_only': False,
+                           'decipher_only': False}
 
         if parent is not None:
             parent.addChild(self)
@@ -221,15 +221,95 @@ class Node (object):
         del self._subject_alt_names[row]
 
     @property
-    def key_usage_ca(self):
-        if self._key_usage_ca:
-            return self._key_usage_ca
-        else:
-            return False
+    def basic_constraint_ca(self):
+        if self._basic_constraint_ca:
+            return self._basic_constraint_ca
 
-    @key_usage_ca.setter
-    def key_usage_ca(self, value):
-        self._key_usage_ca = value
+    @basic_constraint_ca.setter
+    def basic_constraint_ca(self, value):
+        self._basic_constraint_ca = value
+
+    @property
+    def key_usage(self):
+        return self._key_usage
+
+    @key_usage.setter
+    def key_usage(self, value):
+        self._key_usage = value
+
+    # KeyUsage getters and Setters
+
+    @property
+    def digital_signature(self):
+        return self._key_usage['digital_signature']
+
+    @digital_signature.setter
+    def digital_signature(self, value):
+        self._key_usage['digital_signature'] = value
+
+    @property
+    def content_commitment(self):
+        return self._key_usage['content_commitment']
+
+    @content_commitment.setter
+    def content_commitment(self, value):
+        self._key_usage['content_commitment'] = value
+
+    @property
+    def key_encipherment(self):
+        return self._key_usage['key_encipherment']
+
+    @key_encipherment.setter
+    def key_encipherment(self, value):
+        self._key_usage['key_encipherment'] = value
+
+    @property
+    def data_encipherment(self):
+        return self._key_usage['data_encipherment']
+
+    @data_encipherment.setter
+    def data_encipherment(self, value):
+        self._key_usage['data_encipherment'] = value
+
+    @property
+    def key_agreement(self):
+        return self._key_usage['key_agreement']
+
+    @key_agreement.setter
+    def key_agreement(self, value):
+        self._key_usage['key_agreement'] = value
+
+    @property
+    def key_cert_sign(self):
+        return self._key_usage['key_cert_sign']
+
+    @key_cert_sign.setter
+    def key_cert_sign(self, value):
+        self._key_usage['key_cert_sign'] = value
+
+    @property
+    def crl_sign(self):
+        return self._key_usage['crl_sign']
+
+    @crl_sign.setter
+    def crl_sign(self, value):
+        self._key_usage['crl_sign'] = value
+
+    @property
+    def encipher_only(self):
+        return self._key_usage['encipher_only']
+
+    @encipher_only.setter
+    def encipher_only(self, value):
+        self._key_usage['encipher_only'] = value
+
+    @property
+    def decipher_only(self):
+        return self._key_usage['decipher_only']
+
+    @decipher_only.setter
+    def decipher_only(self, value):
+        self._key_usage['decipher_only'] = value
 
 
 class TreeModel(QtCore.QAbstractItemModel):
@@ -284,7 +364,25 @@ class TreeModel(QtCore.QAbstractItemModel):
             if index.column() == 10:
                 return node.domain_component
             if index.column() == 11:
-                return node.key_usage_ca
+                return node.basic_constraint_ca
+            if index.column() == 12:
+                return node.digital_signature
+            if index.column() == 13:
+                return node.content_commitment
+            if index.column() == 14:
+                return node.key_encipherment
+            if index.column() == 15:
+                return node.data_encipherment
+            if index.column() == 16:
+                return node.key_agreement
+            if index.column() == 17:
+                return node.key_cert_sign
+            if index.column() == 18:
+                return node.crl_sign
+            if index.column() == 19:
+                return node.encipher_only
+            if index.column() == 20:
+                return node.decipher_only
 
     def setData(self, index, value, role=QtCore.Qt.EditRole):
         if index.isValid():
@@ -324,7 +422,34 @@ class TreeModel(QtCore.QAbstractItemModel):
                     node.domain_component = value
                     self.dataChanged.emit(index, index)
                 if index.column() == 11:
-                    node.key_usage_ca = value
+                    node.basic_constraint_ca = value
+                    self.dataChanged.emit(index, index)
+                if index.column() == 12:
+                    node.digital_signature = value
+                    self.dataChanged.emit(index, index)
+                if index.column() == 13:
+                    node.content_commitment = value
+                    self.dataChanged.emit(index, index)
+                if index.column() == 14:
+                    node.key_encipherment = value
+                    self.dataChanged.emit(index, index)
+                if index.column() == 15:
+                    node.data_encipherment = value
+                    self.dataChanged.emit(index, index)
+                if index.column() == 16:
+                    node.key_agreement = value
+                    self.dataChanged.emit(index, index)
+                if index.column() == 17:
+                    node.key_cert_sign = value
+                    self.dataChanged.emit(index, index)
+                if index.column() == 18:
+                    node.crl_sign = value
+                    self.dataChanged.emit(index, index)
+                if index.column() == 19:
+                    node.encipher_only = value
+                    self.dataChanged.emit(index, index)
+                if index.column() == 20:
+                    node.decipher_only = value
                     self.dataChanged.emit(index, index)
 
                 return True
@@ -391,6 +516,17 @@ class TreeModel(QtCore.QAbstractItemModel):
                 child_node.country_name = parent_node.country_name
                 child_node.email_address = parent_node.email_address
                 child_node.domain_component = parent_node.domain_component
+            if 'ca' in kwargs.keys():
+                child_node.basic_constraint_ca = True
+                child_node.basic_constraints = {'digital_signature': True,
+                                                'content_commitment': True,
+                                                'key_encipherment': False,
+                                                'data_encipherment': False,
+                                                'key_agreement': False,
+                                                'key_cert_sign': True,
+                                                'crl_sign': True,
+                                                'encipher_only': False,
+                                                'decipher_only': False}
             else:
                 child_node = Node('Untitled')
             success = parent_node.insertChild(position, child_node)

@@ -72,6 +72,9 @@ class wndMain(base, form):
         # Menu Item Clicks
         self.actionSave.triggered.connect(self.save_data)
 
+        # Check Box clicks
+        self.CA.stateChanged.connect(self.cb_basic_constraint_ca_changed)
+
     def current_node(self):
         index = self._selectionModel.currentIndex()
         index = self._proxyModel.mapToSource(index)
@@ -97,7 +100,15 @@ class wndMain(base, form):
         self._dataMapper.addMapping(self.leEmail, 9)
         self._dataMapper.addMapping(self.leDomain, 10)
         self._dataMapper.addMapping(self.CA, 11)
-        
+        self._dataMapper.addMapping(self.digitalSignature, 12)
+        self._dataMapper.addMapping(self.contentCommitment, 13)
+        self._dataMapper.addMapping(self.keyEncipherment, 14)
+        self._dataMapper.addMapping(self.dataEncipherment, 15)
+        self._dataMapper.addMapping(self.keyAgreement, 16)
+        self._dataMapper.addMapping(self.keyCertSign, 17)
+        self._dataMapper.addMapping(self.cRLSign, 18)
+        self._dataMapper.addMapping(self.encipherOnly, 19)
+        self._dataMapper.addMapping(self.decipherOnly, 20)
         self._dataMapper.setRootIndex(parent)
         self._dataMapper.setCurrentModelIndex(current)
         # Setup Subject Alt Name list view
@@ -136,7 +147,7 @@ class wndMain(base, form):
             while index.isValid():
                 index = index.parent()
             end_of_list = self._model._rootNode.child_count
-            self._model.insertRow(end_of_list, index, name=name)
+            self._model.insertRow(end_of_list, index, name=name, ca=True)
 
     @pyqtSlot()
     def on_click_create_sub(self):
@@ -147,7 +158,7 @@ class wndMain(base, form):
                                                              QtWidgets.QLineEdit.Normal, "")
             if okPressed and name != '':
                 end_of_list = index.internalPointer().child_count
-                self._model.insertRow(end_of_list, index, name=name)
+                self._model.insertRow(end_of_list, index, name=name, ca=True)
 
 
     @pyqtSlot()
@@ -206,6 +217,29 @@ class wndMain(base, form):
 
 
         print(node.private_key)
+
+
+    @pyqtSlot()
+    def cb_basic_constraint_ca_changed(self):
+        if self.CA.isChecked():
+            print('checked')
+            self.keyEncipherment.setChecked(False)
+            self.keyEncipherment.setEnabled(False)
+            self.dataEncipherment.setChecked(False)
+            self.dataEncipherment.setEnabled(False)
+            self.keyAgreement.setChecked(False)
+            self.keyAgreement.setEnabled(False)
+            self.encipherOnly.setChecked(False)
+            self.encipherOnly.setEnabled(False)
+            self.decipherOnly.setChecked(False)
+            self.decipherOnly.setEnabled(False)
+        else:
+            print('unchecked')
+            self.keyEncipherment.setEnabled(True)
+            self.dataEncipherment.setEnabled(True)
+            self.keyAgreement.setEnabled(True)
+            self.encipherOnly.setEnabled(True)
+            self.decipherOnly.setEnabled(True)
 
     @pyqtSlot()
     def save_data(self):

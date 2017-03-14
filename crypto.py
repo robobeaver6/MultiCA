@@ -141,7 +141,7 @@ def create_root_certificate(node, key: ec.EllipticCurvePrivateKey):
     builder = builder.not_valid_before(datetime.datetime.utcnow())
     builder = builder.not_valid_after(datetime.datetime.utcnow() + datetime.timedelta(days=randint(7000, 15000)))
     builder = builder.add_extension(x509.SubjectAlternativeName(subject_alt_name_string(node)), critical=False,)
-    builder = builder.add_extension(x509.SubjectKeyIdentifier(key.curve), critical=False)
+    builder = builder.add_extension(x509.SubjectKeyIdentifier.from_public_key(key.public_key()), critical=False)
     builder = builder.add_extension(x509.KeyUsage(digital_signature=True,
                                                   content_commitment=True,
                                                   key_encipherment=False,
@@ -156,7 +156,9 @@ def create_root_certificate(node, key: ec.EllipticCurvePrivateKey):
     return cert
 
 
-def sign_csr(csr, ca_key, ca_cert, ca=False):
+def sign_csr(csr, ca_key: ec.EllipticCurvePrivateKey, ca_cert: x509.Certificate, ca=False):
+    ski = ca_cert.extensions.get_extension_for_class(x509.SubjectKeyIdentifier)
+
     one_day = datetime.timedelta(1, 0, 0)
     builder = x509.CertificateBuilder()
     builder = builder.subject_name(x509.Name(csr.subject))
@@ -164,9 +166,10 @@ def sign_csr(csr, ca_key, ca_cert, ca=False):
     builder = builder.not_valid_before(datetime.datetime.today() - one_day)
     builder = builder.not_valid_after(datetime.datetime.utcnow() + datetime.timedelta(days=3600))
     # builder = builder.serial_number(x509.random_serial_number())
-    builder = builder.serial_number(0xffffffffffffffffffffffffffffffff)
+    builder = builder.serial_number(randint(1000000, 0xffffffffffffffffffffffffffffffff))
     builder = builder.public_key(csr.public_key())
-    # builder = builder.add_extension(x509.SubjectAlternativeName(csr.extensions), critical=False)
+    builder = builder.add_extension(x509.AuthorityKeyIdentifier(key_identifier=ski,
+                                                                authority_cert_issuer=ca_cert.subject))
     for i in csr.extensions:
         builder = builder.add_extension(i.value, critical=False)
     builder = builder.add_extension(x509.BasicConstraints(ca=ca, path_length=None), critical=True,)
