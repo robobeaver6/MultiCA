@@ -395,6 +395,39 @@
             </property>
             <layout class="QVBoxLayout" name="verticalLayout_4">
              <item>
+              <widget class="QGroupBox" name="rfcUsage">
+               <property name="title">
+                <string>RFC5759 Suite B Key Usage Compliance</string>
+               </property>
+               <layout class="QGridLayout" name="gridLayout">
+                <item row="0" column="1">
+                 <widget class="QRadioButton" name="rbKeyEstablishment">
+                  <property name="text">
+                   <string>Key Establishment</string>
+                  </property>
+                 </widget>
+                </item>
+                <item row="0" column="2">
+                 <widget class="QRadioButton" name="rbNonCompliant">
+                  <property name="text">
+                   <string>Non Compliant</string>
+                  </property>
+                 </widget>
+                </item>
+                <item row="0" column="0">
+                 <widget class="QRadioButton" name="rbDigitalSig">
+                  <property name="enabled">
+                   <bool>true</bool>
+                  </property>
+                  <property name="text">
+                   <string>Digital Signature</string>
+                  </property>
+                 </widget>
+                </item>
+               </layout>
+              </widget>
+             </item>
+             <item>
               <widget class="QGroupBox" name="groupBox_3">
                <property name="title">
                 <string>Key Length</string>

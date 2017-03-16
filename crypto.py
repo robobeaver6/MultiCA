@@ -168,8 +168,10 @@ def sign_csr(csr, ca_key: ec.EllipticCurvePrivateKey, ca_cert: x509.Certificate,
     # builder = builder.serial_number(x509.random_serial_number())
     builder = builder.serial_number(randint(1000000, 0xffffffffffffffffffffffffffffffff))
     builder = builder.public_key(csr.public_key())
-    builder = builder.add_extension(x509.AuthorityKeyIdentifier(key_identifier=ski,
-                                                                authority_cert_issuer=ca_cert.subject))
+    builder = builder.add_extension(x509.AuthorityKeyIdentifier(key_identifier=ski.value.digest,
+                                                                authority_cert_issuer=None,
+                                                                authority_cert_serial_number=None),
+                                    critical=False)
     for i in csr.extensions:
         builder = builder.add_extension(i.value, critical=False)
     builder = builder.add_extension(x509.BasicConstraints(ca=ca, path_length=None), critical=True,)
@@ -226,6 +228,8 @@ def main():
 
     with open("test_cert.pem", "wb") as f:
         f.write(sub_cert.public_bytes(serialization.Encoding.PEM))
+
+    os.system('openssl x509 -in test_cert.pem -noout -text')
 
 if __name__ == '__main__':
     main()

@@ -26,6 +26,7 @@ class Node (object):
         self._date_end = None
         
         self._subject_alt_names = []
+        self._rfc_usage = 'KeyEncipherment'
         self._basic_constraint_ca = False
         self._basic_constraint_path_length = None
         self._key_usage = {'digital_signature': True,
@@ -310,6 +311,14 @@ class Node (object):
     @decipher_only.setter
     def decipher_only(self, value):
         self._key_usage['decipher_only'] = value
+
+    @property
+    def rfc_usage(self):
+        return self._rfc_usage
+
+    @rfc_usage.setter
+    def rfc_usage(self, value):
+        self._rfc_usage = value
 
 
 class TreeModel(QtCore.QAbstractItemModel):

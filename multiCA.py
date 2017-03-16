@@ -6,6 +6,7 @@ import os
 import caTree
 import pickle
 import crypto
+from pprint import pprint
 
 base, form = uic.loadUiType("MultiCA.ui")
 baseNewCA, formNewCA = uic.loadUiType("NewCA_Dialog.ui")
@@ -35,7 +36,7 @@ class wndMain(base, form):
 
         self._root_node = caTree.Node("Root Node")
 
-        if os.path.exists('data.pkl'):
+        if os.path.exists('-old.pkl'):
             self.load_data()
 
         self._model = caTree.TreeModel(self._root_node)
@@ -75,6 +76,12 @@ class wndMain(base, form):
         # Check Box clicks
         self.CA.stateChanged.connect(self.cb_basic_constraint_ca_changed)
 
+        # RFC5759 Compliance Radio Buttons
+        # self.rbCertAuth.setChecked(True)
+        self.rbKeyEstablishment.toggled.connect(lambda: self.cb_basic_constraint_ca_changed(rfc_usage='KeyEstablishment'))
+        self.rbDigitalSig.toggled.connect(lambda: self.cb_basic_constraint_ca_changed(rfc_usage='DigitalSignature'))
+        self.rbNonCompliant.toggled.connect(lambda: self.cb_basic_constraint_ca_changed(rfc_usage='NonCompliant'))
+
     def current_node(self):
         index = self._selectionModel.currentIndex()
         index = self._proxyModel.mapToSource(index)
@@ -86,6 +93,7 @@ class wndMain(base, form):
         # print('selection Changed', current, old)
         current = self._proxyModel.mapToSource(current)
         parent = current.parent()
+        node = current.internalPointer()
         # Connect up dataMapper to List boxes
         self._dataMapper.setModel(self._proxyModel.sourceModel())
         self._dataMapper.addMapping(self.leName, 0)
@@ -117,6 +125,17 @@ class wndMain(base, form):
         if current.internalPointer():
             self._model_list.setStringList(current.internalPointer().subject_alt_names)
         self._model_list.dataChanged.connect(lambda: self._subject_alt_names_data_changed(current))
+
+        # Radio Buttons to control Key usage Extensions
+        if self.CA.isChecked():
+            pass
+        else:
+            if node.rfc_usage == 'KeyEstablishment':
+                self.rbKeyEstablishment.setChecked(True)
+            elif node.rfc_usage == 'DigitalSignature':
+                self.rbDigitalSig.setChecked(True)
+            elif node.rfc_usage == 'NonCompliant':
+                self.rbNonCompliant.setChecked(True)
 
     @pyqtSlot()
     def _subject_alt_names_data_changed(self, current):
@@ -163,7 +182,7 @@ class wndMain(base, form):
 
     @pyqtSlot()
     def on_click_manage(self):
-        self.treeView.resizeColumnsToContents()
+        self.debug_key_usage()
 
 
     def on_click_delete(self):
@@ -220,26 +239,107 @@ class wndMain(base, form):
 
 
     @pyqtSlot()
-    def cb_basic_constraint_ca_changed(self):
-        if self.CA.isChecked():
-            print('checked')
-            self.keyEncipherment.setChecked(False)
-            self.keyEncipherment.setEnabled(False)
-            self.dataEncipherment.setChecked(False)
-            self.dataEncipherment.setEnabled(False)
-            self.keyAgreement.setChecked(False)
-            self.keyAgreement.setEnabled(False)
-            self.encipherOnly.setChecked(False)
-            self.encipherOnly.setEnabled(False)
-            self.decipherOnly.setChecked(False)
-            self.decipherOnly.setEnabled(False)
-        else:
-            print('unchecked')
-            self.keyEncipherment.setEnabled(True)
-            self.dataEncipherment.setEnabled(True)
-            self.keyAgreement.setEnabled(True)
-            self.encipherOnly.setEnabled(True)
-            self.decipherOnly.setEnabled(True)
+    def cb_basic_constraint_ca_changed(self, *args, **kwargs):
+        node = self.current_node()
+        # if self.CA.isChecked():
+        #     # print('checked')
+        #     node.rfc_usage = 'CertificateAuth'
+        #     # self.rbCertAuth.setChecked(True)
+        #     self.rbKeyEstablishment.setChecked(False)
+        #     self.rbDigitalSig.setChecked(False)
+        #     self.rbNonCompliant.setChecked(False)
+        #     self.rbKeyEstablishment.setEnabled(False)
+        #     self.rbDigitalSig.setEnabled(False)
+        #     self.rbNonCompliant.setEnabled(False)
+        #
+        #     # self.digitalSignature.setChecked(False)
+        #     self.digitalSignature.setEnabled(True)
+        #     # self.contentCommitment.setChecked(False)
+        #     self.contentCommitment.setEnabled(True)
+        #     self.keyEncipherment.setChecked(False)
+        #     self.keyEncipherment.setEnabled(False)
+        #     self.dataEncipherment.setChecked(False)
+        #     self.dataEncipherment.setEnabled(False)
+        #     self.keyAgreement.setChecked(False)
+        #     self.keyAgreement.setEnabled(False)
+        #     self.keyCertSign.setChecked(True)
+        #     self.keyCertSign.setEnabled(False)
+        #     self.cRLSign.setChecked(True)
+        #     self.cRLSign.setEnabled(False)
+        #     self.encipherOnly.setChecked(False)
+        #     self.encipherOnly.setEnabled(False)
+        #     self.decipherOnly.setChecked(False)
+        #     self.decipherOnly.setEnabled(False)
+        # else:
+        #     self.rbKeyEstablishment.setEnabled(True)
+        #     self.rbDigitalSig.setEnabled(True)
+        #     self.rbNonCompliant.setEnabled(True)
+        #     if 'rfc_usage' not in kwargs.keys():
+        #         kwargs['rfc_usage'] = node.rfc_usage
+        #
+        #     if kwargs['rfc_usage'] == 'DigitalSignature':
+        #         print('Digital Sig')
+        #         node.rfc_usage = 'DigitalSignature'
+        #         self.digitalSignature.setChecked(True)
+        #         self.digitalSignature.setEnabled(False)
+        #         # self.contentCommitment.setChecked(False)
+        #         self.contentCommitment.setEnabled(True)
+        #         self.keyEncipherment.setChecked(False)
+        #         self.keyEncipherment.setEnabled(False)
+        #         self.dataEncipherment.setChecked(False)
+        #         self.dataEncipherment.setEnabled(False)
+        #         self.keyAgreement.setChecked(False)
+        #         self.keyAgreement.setEnabled(False)
+        #         self.keyCertSign.setChecked(False)
+        #         self.keyCertSign.setEnabled(False)
+        #         self.cRLSign.setChecked(False)
+        #         self.cRLSign.setEnabled(False)
+        #         self.encipherOnly.setChecked(False)
+        #         self.encipherOnly.setEnabled(False)
+        #         self.decipherOnly.setChecked(False)
+        #         self.decipherOnly.setEnabled(False)
+        #     elif kwargs['rfc_usage'] == 'KeyEstablishment':
+        #         print('Key Establishment')
+        #         node.rfc_usage = 'KeyEstablishment'
+        #         self.digitalSignature.setChecked(False)
+        #         self.digitalSignature.setEnabled(False)
+        #         self.contentCommitment.setChecked(False)
+        #         self.contentCommitment.setEnabled(False)
+        #         self.keyEncipherment.setChecked(False)
+        #         self.keyEncipherment.setEnabled(False)
+        #         self.dataEncipherment.setChecked(False)
+        #         self.dataEncipherment.setEnabled(False)
+        #         self.keyAgreement.setChecked(True)
+        #         self.keyAgreement.setEnabled(False)
+        #         self.keyCertSign.setChecked(False)
+        #         self.keyCertSign.setEnabled(False)
+        #         self.cRLSign.setChecked(False)
+        #         self.cRLSign.setEnabled(False)
+        #         # self.encipherOnly.setChecked(True)
+        #         self.encipherOnly.setEnabled(True)
+        #         # self.decipherOnly.setChecked(False)
+        #         self.decipherOnly.setEnabled(True)
+        #     elif kwargs['rfc_usage'] == 'NonCompliant':
+        #         print('Non Compliant')
+        #         node.rfc_usage = 'NonCompliant'
+        #         # self.digitalSignature.setChecked(True)
+        #         self.digitalSignature.setEnabled(True)
+        #         # self.contentCommitment.setChecked(False)
+        #         self.contentCommitment.setEnabled(True)
+        #         # self.keyEncipherment.setChecked(False)
+        #         self.keyEncipherment.setEnabled(True)
+        #         # self.dataEncipherment.setChecked(False)
+        #         self.dataEncipherment.setEnabled(True)
+        #         # self.keyAgreement.setChecked(False)
+        #         self.keyAgreement.setEnabled(True)
+        #         self.keyCertSign.setChecked(False)
+        #         self.keyCertSign.setEnabled(False)
+        #         self.cRLSign.setChecked(False)
+        #         self.cRLSign.setEnabled(False)
+        #         # self.encipherOnly.setChecked(False)
+        #         self.encipherOnly.setEnabled(True)
+        #         # self.decipherOnly.setChecked(False)
+        #         self.decipherOnly.setEnabled(True)
 
     @pyqtSlot()
     def save_data(self):
@@ -248,10 +348,17 @@ class wndMain(base, form):
             print('Data Saved')
 
     def load_data(self):
-        with open('data.pkl', 'rb') as file_in:
-            self._root_node = pickle.load(file_in)
-            print('Data Loaded')
+        if os.path.exists('data.pkl'):
+            with open('data.pkl', 'rb') as file_in:
+                self._root_node = pickle.load(file_in)
+                print('Data Loaded')
 
+    def debug_key_usage(self):
+        node = self.current_node()
+        output = []
+        for key, value in node.key_usage.items():
+            output.append('{} - {}'.format(key, value))
+        pprint(output)
 
 if __name__ == "__main__":
     app = QtWidgets.QApplication(sys.argv)
