@@ -1,5 +1,7 @@
 from PyQt5 import QtCore, QtWidgets, QtGui
+from cryptography.hazmat.primitives.asymmetric import rsa, ec
 import uuid
+import crypto
 
 
 class Node (object):
@@ -24,7 +26,8 @@ class Node (object):
         self._cert_sign_req = None
         self._date_start = None
         self._date_end = None
-        
+        self._key_length = 256
+        self._key = None
         self._subject_alt_names = []
         self._rfc_usage = 'KeyEncipherment'
         self._basic_constraint_ca = False
@@ -319,6 +322,17 @@ class Node (object):
     @rfc_usage.setter
     def rfc_usage(self, value):
         self._rfc_usage = value
+
+    @property
+    def key(self):
+        return self._key
+
+    @key.setter
+    def key(self, value):
+        self._key = value
+
+    def key_create(self, passphrase=''):
+        self._key = crypto.Key(self._key_length, passphrase)
 
 
 class TreeModel(QtCore.QAbstractItemModel):
