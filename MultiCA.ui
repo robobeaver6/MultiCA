@@ -7,7 +7,7 @@
     <x>0</x>
     <y>0</y>
     <width>1401</width>
-    <height>888</height>
+    <height>1002</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -57,6 +57,13 @@
         </widget>
        </item>
        <item>
+        <widget class="QPushButton" name="btnCreateEndEntiy">
+         <property name="text">
+          <string>Create End Entity</string>
+         </property>
+        </widget>
+       </item>
+       <item>
         <widget class="QPushButton" name="btnManage">
          <property name="text">
           <string>Manage CA</string>
@@ -96,43 +103,67 @@
       </property>
       <layout class="QHBoxLayout" name="horizontalLayout">
        <item>
-        <widget class="QTreeView" name="treeView">
-         <property name="sizeAdjustPolicy">
-          <enum>QAbstractScrollArea::AdjustIgnored</enum>
+        <widget class="QTabWidget" name="tabWidget">
+         <property name="currentIndex">
+          <number>0</number>
          </property>
-         <property name="showDropIndicator" stdset="0">
-          <bool>true</bool>
-         </property>
-         <property name="alternatingRowColors">
-          <bool>true</bool>
-         </property>
-         <property name="iconSize">
-          <size>
-           <width>20</width>
-           <height>40</height>
-          </size>
-         </property>
-         <property name="textElideMode">
-          <enum>Qt::ElideLeft</enum>
-         </property>
-         <property name="autoExpandDelay">
-          <number>5</number>
-         </property>
-         <property name="sortingEnabled">
-          <bool>true</bool>
-         </property>
-         <attribute name="headerCascadingSectionResizes">
-          <bool>true</bool>
-         </attribute>
-         <attribute name="headerDefaultSectionSize">
-          <number>100</number>
-         </attribute>
-         <attribute name="headerMinimumSectionSize">
-          <number>100</number>
-         </attribute>
-         <attribute name="headerStretchLastSection">
-          <bool>true</bool>
-         </attribute>
+         <widget class="QWidget" name="tab">
+          <attribute name="title">
+           <string>CA Tree</string>
+          </attribute>
+          <layout class="QGridLayout" name="gridLayout_7">
+           <item row="0" column="0">
+            <widget class="QTreeView" name="treeView">
+             <property name="sizeAdjustPolicy">
+              <enum>QAbstractScrollArea::AdjustIgnored</enum>
+             </property>
+             <property name="showDropIndicator" stdset="0">
+              <bool>true</bool>
+             </property>
+             <property name="alternatingRowColors">
+              <bool>true</bool>
+             </property>
+             <property name="iconSize">
+              <size>
+               <width>20</width>
+               <height>40</height>
+              </size>
+             </property>
+             <property name="textElideMode">
+              <enum>Qt::ElideLeft</enum>
+             </property>
+             <property name="autoExpandDelay">
+              <number>5</number>
+             </property>
+             <property name="sortingEnabled">
+              <bool>true</bool>
+             </property>
+             <attribute name="headerCascadingSectionResizes">
+              <bool>true</bool>
+             </attribute>
+             <attribute name="headerDefaultSectionSize">
+              <number>100</number>
+             </attribute>
+             <attribute name="headerMinimumSectionSize">
+              <number>100</number>
+             </attribute>
+             <attribute name="headerStretchLastSection">
+              <bool>true</bool>
+             </attribute>
+            </widget>
+           </item>
+          </layout>
+         </widget>
+         <widget class="QWidget" name="tab_2">
+          <attribute name="title">
+           <string>End Entities</string>
+          </attribute>
+          <layout class="QGridLayout" name="gridLayout_8">
+           <item row="0" column="0">
+            <widget class="QTableView" name="tblEndEntities"/>
+           </item>
+          </layout>
+         </widget>
         </widget>
        </item>
        <item>
@@ -376,13 +407,6 @@
               </property>
              </widget>
             </item>
-            <item row="14" column="1">
-             <widget class="QPushButton" name="btnGenerate">
-              <property name="text">
-               <string>Generate Key and Certificate</string>
-              </property>
-             </widget>
-            </item>
            </layout>
           </item>
           <item>
@@ -434,20 +458,15 @@
                </property>
                <layout class="QGridLayout" name="gridLayout_4">
                 <item row="0" column="0">
-                 <widget class="QComboBox" name="cbEncryption">
+                 <widget class="QComboBox" name="KeyLength">
                   <item>
                    <property name="text">
-                    <string>256 Bit</string>
+                    <string>256</string>
                    </property>
                   </item>
                   <item>
                    <property name="text">
-                    <string>384 Bit</string>
-                   </property>
-                  </item>
-                  <item>
-                   <property name="text">
-                    <string>512 Bit</string>
+                    <string>384</string>
                    </property>
                   </item>
                  </widget>
@@ -470,6 +489,9 @@
                 </item>
                 <item row="0" column="0">
                  <widget class="QCheckBox" name="CA">
+                  <property name="enabled">
+                   <bool>true</bool>
+                  </property>
                   <property name="text">
                    <string>CA</string>
                   </property>
@@ -556,11 +578,41 @@
             </layout>
            </widget>
           </item>
+          <item>
+           <widget class="QGroupBox" name="groupBox_4">
+            <property name="title">
+             <string/>
+            </property>
+            <layout class="QGridLayout" name="gridLayout_5">
+             <item row="0" column="1">
+              <widget class="QPushButton" name="btnGenCSR">
+               <property name="text">
+                <string>Generate CSR</string>
+               </property>
+              </widget>
+             </item>
+             <item row="0" column="0">
+              <widget class="QPushButton" name="btnGenKey">
+               <property name="text">
+                <string>Generate Key</string>
+               </property>
+              </widget>
+             </item>
+             <item row="0" column="2">
+              <widget class="QPushButton" name="btnGenCert">
+               <property name="text">
+                <string>Sign CSR / Gen Cert</string>
+               </property>
+              </widget>
+             </item>
+            </layout>
+           </widget>
+          </item>
          </layout>
         </widget>
        </item>
        <item>
-        <layout class="QVBoxLayout" name="Output">
+        <layout class="QGridLayout" name="gridLayout_6">
          <property name="leftMargin">
           <number>10</number>
          </property>
@@ -573,35 +625,68 @@
          <property name="bottomMargin">
           <number>10</number>
          </property>
-         <item>
-          <widget class="QLabel" name="label_3">
-           <property name="text">
-            <string>Certificate</string>
+         <item row="1" column="0">
+          <widget class="QPlainTextEdit" name="PrivateKey">
+           <property name="font">
+            <font>
+             <family>Consolas</family>
+            </font>
+           </property>
+           <property name="lineWrapMode">
+            <enum>QPlainTextEdit::NoWrap</enum>
+           </property>
+           <property name="readOnly">
+            <bool>false</bool>
            </property>
           </widget>
          </item>
-         <item>
-          <widget class="QPlainTextEdit" name="teCertificate">
-           <property name="enabled">
-            <bool>true</bool>
+         <item row="5" column="0">
+          <widget class="QPlainTextEdit" name="Certificate">
+           <property name="font">
+            <font>
+             <family>Consolas</family>
+            </font>
            </property>
-           <property name="sizePolicy">
-            <sizepolicy hsizetype="Expanding" vsizetype="MinimumExpanding">
-             <horstretch>0</horstretch>
-             <verstretch>0</verstretch>
-            </sizepolicy>
+           <property name="lineWrapMode">
+            <enum>QPlainTextEdit::NoWrap</enum>
+           </property>
+           <property name="readOnly">
+            <bool>false</bool>
            </property>
           </widget>
          </item>
-         <item>
+         <item row="0" column="0">
           <widget class="QLabel" name="label_16">
            <property name="text">
             <string>Private Key</string>
            </property>
           </widget>
          </item>
-         <item>
-          <widget class="QTextEdit" name="teKey"/>
+         <item row="3" column="0">
+          <widget class="QPlainTextEdit" name="CertSignReq">
+           <property name="font">
+            <font>
+             <family>Consolas</family>
+            </font>
+           </property>
+           <property name="lineWrapMode">
+            <enum>QPlainTextEdit::NoWrap</enum>
+           </property>
+          </widget>
+         </item>
+         <item row="4" column="0">
+          <widget class="QLabel" name="label_3">
+           <property name="text">
+            <string>Certificate</string>
+           </property>
+          </widget>
+         </item>
+         <item row="2" column="0">
+          <widget class="QLabel" name="label_18">
+           <property name="text">
+            <string>Certificate Signing Request</string>
+           </property>
+          </widget>
          </item>
         </layout>
        </item>
@@ -640,6 +725,49 @@
    </property>
   </action>
  </widget>
+ <tabstops>
+  <tabstop>btnCreateRoot</tabstop>
+  <tabstop>btnCreateSub</tabstop>
+  <tabstop>btnManage</tabstop>
+  <tabstop>leName</tabstop>
+  <tabstop>leDescription</tabstop>
+  <tabstop>leUID</tabstop>
+  <tabstop>leCommonName</tabstop>
+  <tabstop>leOrgUnit</tabstop>
+  <tabstop>leOrganization</tabstop>
+  <tabstop>leLocality</tabstop>
+  <tabstop>leStateOrProvince</tabstop>
+  <tabstop>leCountry</tabstop>
+  <tabstop>leEmail</tabstop>
+  <tabstop>leDomain</tabstop>
+  <tabstop>lstSubjectAltName</tabstop>
+  <tabstop>btnAltNameAdd</tabstop>
+  <tabstop>btnAltNameDel</tabstop>
+  <tabstop>dtStart</tabstop>
+  <tabstop>dtEnd</tabstop>
+  <tabstop>rbDigitalSig</tabstop>
+  <tabstop>rbKeyEstablishment</tabstop>
+  <tabstop>rbNonCompliant</tabstop>
+  <tabstop>KeyLength</tabstop>
+  <tabstop>CA</tabstop>
+  <tabstop>lePathLength</tabstop>
+  <tabstop>digitalSignature</tabstop>
+  <tabstop>contentCommitment</tabstop>
+  <tabstop>keyEncipherment</tabstop>
+  <tabstop>dataEncipherment</tabstop>
+  <tabstop>keyAgreement</tabstop>
+  <tabstop>keyCertSign</tabstop>
+  <tabstop>cRLSign</tabstop>
+  <tabstop>encipherOnly</tabstop>
+  <tabstop>decipherOnly</tabstop>
+  <tabstop>btnGenKey</tabstop>
+  <tabstop>btnGenCSR</tabstop>
+  <tabstop>btnGenCert</tabstop>
+  <tabstop>PrivateKey</tabstop>
+  <tabstop>CertSignReq</tabstop>
+  <tabstop>Certificate</tabstop>
+  <tabstop>btnDelete</tabstop>
+ </tabstops>
  <resources/>
  <connections/>
 </ui>

@@ -13,65 +13,60 @@ from pprint import pprint
 from random import randint
 import datetime
 import binascii
-
-OID_IN_USE = {'common_name': {'default': True, 'mandatory': True},
-              'country_name': {'default': False, 'mandatory': False},
-              'domain_component': {'default': False, 'mandatory': False},
-              'email_address': {'default': False, 'mandatory': False},
-              'locality_name': {'default': False, 'mandatory': False},
-              'organization_name': {'default': False, 'mandatory': False},
-              'organizational_unit_name': {'default': False, 'mandatory': False},
-              'serial_number': {'default': False, 'mandatory': False},
-              'state_or_province_name': {'default': False, 'mandatory': False}}
-
-
-class Certificate(object):
-    def __init__(self, cert=None):
-        self._certificate_string = cert
-
-    @property
-    def certificate(self):
-        return x509.load_pem_x509_certificate(self._certificate_string, backend=default_backend())
-
-    @certificate.setter
-    def certificate(self, value):
-        self._certificate_string = value.public_bytes(serialization.Encoding.PEM)
-
-    def __str__(self):
-        return str(self._certificate_string, 'utf-8')
+import logging
 
 
 class Key(object):
-    def __init__(self, node, length=256, passphrase=''):
-        if length == 256:
-            curve = ec.SECP256R1
-        elif length == 384:
-            curve = ec.SECP384R1
-        else:
-            raise ValueError
+    def __init__(self, node):
+        # if length == 256:
+        #     curve = ec.SECP256R1
+        # elif length == 384:
+        #     curve = ec.SECP384R1
+        # else:
+        #     raise ValueError
         self._node = node
-        self._key_length = length
-        key = ec.generate_private_key(curve=curve, backend=default_backend())
-        self._str_key = key.private_bytes(encoding=serialization.Encoding.PEM,
-                                          format=serialization.PrivateFormat.TraditionalOpenSSL,
-                                          encryption_algorithm=serialization.BestAvailableEncryption(passphrase.encode()
-                                                                                                     ))
+        self._key_length = 256
+        # key = ec.generate_private_key(curve=curve, backend=default_backend())
+        # self._str_key = key.private_bytes(encoding=serialization.Encoding.PEM,
+        #                                   format=serialization.PrivateFormat.TraditionalOpenSSL,
+        #                                   encryption_algorithm=serialization.BestAvailableEncryption(passphrase.encode()
+        #                                   ))
+        self._str_key = None
         self._str_csr = None
         self._str_certificate = None
 
     def __str__(self):
-        output = str(self._str_key, 'utf-8')
-        output += str(self._str_csr, 'utf-8')
-        output += str(self._str_certificate, 'utf-8')
+        output = ''
+        if self._str_key:
+            output += str(self._str_key, 'utf-8')
+        if self._str_csr:
+            output += str(self._str_csr, 'utf-8')
+        if self._str_certificate:
+            output += str(self._str_certificate, 'utf-8')
         return output
 
-    @property
-    def certificate(self):
-        return x509.load_pem_x509_certificate(self._str_certificate, backend=default_backend())
+    def create_private_key(self, length: int=256, pass_phrase: str=''):
+        if length == 256:
+            self._key_length = length
+            curve = ec.SECP256R1
+        elif length == 384:
+            self._key_length = length
+            curve = ec.SECP384R1
+        else:
+            raise ValueError
+        if not self._str_key:
+            key = ec.generate_private_key(curve=curve, backend=default_backend())
+            self._str_key = key.private_bytes(encoding=serialization.Encoding.PEM,
+                                              format=serialization.PrivateFormat.TraditionalOpenSSL,
+                                              encryption_algorithm=serialization.BestAvailableEncryption(
+                                                  pass_phrase.encode()))
 
-    @certificate.setter
-    def certificate(self, value):
-        self._str_certificate = value.public_bytes(serialization.Encoding.PEM)
+    @property
+    def private_key_exists(self):
+        if self._str_key:
+            return True
+        else:
+            return False
 
     def private_key(self, passphrase=''):
         try:
@@ -82,10 +77,42 @@ class Key(object):
             print('ERROR: Incorrect Password')
 
     @property
+    def certificate(self):
+        if self._str_certificate is None or self._str_certificate == b'':
+            return None
+        else:
+            try:
+                cert = x509.load_pem_x509_certificate(self._str_certificate, backend=default_backend())
+                return cert
+            except:
+                logging.critical('certificate error: ')
+
+    @certificate.setter
+    def certificate(self, value):
+        self._str_certificate = value.public_bytes(serialization.Encoding.PEM)
+
+
+
+    @property
     def csr(self):
-        return x509.load_pem_x509_csr(self._str_csr, default_backend())
+        if self._str_csr:
+            return x509.load_pem_x509_csr(self._str_csr, default_backend())
+        else:
+            return None
+
+    @property
+    def ready(self):
+        if self.private_key is not None and self.certificate is not None:
+            return True
+        else:
+            return False
 
     def create_root_certificate(self, passphrase):
+        """
+        Create self signed Root CA Certificate
+        :param passphrase: Private key pass phrase
+        :return:
+        """
         node = self._node
         key = self.private_key(passphrase)
         subject = issuer = x509.Name(subject_string(node))
@@ -116,6 +143,11 @@ class Key(object):
             raise ValueError
 
     def create_cert_sign_req(self, passphrase):
+        """
+        Generate a Certificate Signing Request (CSR) for the current object's private key
+        :param passphrase: Private key Password
+        :return:
+        """
         node = self._node
         builder = x509.CertificateSigningRequestBuilder().subject_name(x509.Name(subject_string(node)))
         builder = builder.add_extension(x509.SubjectAlternativeName(subject_alt_name_string(node)), critical=False,)
@@ -128,21 +160,27 @@ class Key(object):
         self._str_csr = csr.public_bytes(serialization.Encoding.PEM)
 
     def sign_csr(self, csr, passphrase):
-    # def sign_csr(csr, ca_key: ec.EllipticCurvePrivateKey, ca_cert: x509.Certificate, ca=False):
+        """
+        Signs a Certificate Signing Request with the key and cert of this object
+        :param csr: Certificate Signing Request passed to function for signing
+        :param passphrase: Private key passphrase
+        :return: Signed x509 Certificate object
+        """
         ski = self.certificate.extensions.get_extension_for_class(x509.SubjectKeyIdentifier)
+        key = self.private_key(passphrase)
         one_day = datetime.timedelta(1, 0, 0)
         builder = x509.CertificateBuilder()
         builder = builder.subject_name(x509.Name(csr.subject))
         builder = builder.issuer_name(x509.Name(self.certificate.subject))
         builder = builder.not_valid_before(datetime.datetime.today() - one_day)
         builder = builder.not_valid_after(datetime.datetime.utcnow() + datetime.timedelta(days=3600))
-        # builder = builder.serial_number(x509.random_serial_number())
         builder = builder.serial_number(random_serial_number())
         builder = builder.public_key(csr.public_key())
         builder = builder.add_extension(x509.AuthorityKeyIdentifier(key_identifier=ski.value.digest,
                                                                     authority_cert_issuer=None,
                                                                     authority_cert_serial_number=None),
                                         critical=False)
+        builder = builder.add_extension(x509.SubjectKeyIdentifier.from_public_key(key.public_key()), critical=False)
         # TODO: Fix the Key Usage so it inherits from the CSR
         builder = builder.add_extension(x509.KeyUsage(digital_signature=True,
                                                       content_commitment=True,
@@ -158,11 +196,11 @@ class Key(object):
         # TODO Make sure CA flag is appropriatly set
         builder = builder.add_extension(x509.BasicConstraints(ca=True, path_length=None), critical=True, )
         if self._key_length == 256:
-            certificate = builder.sign(private_key=self.private_key(passphrase),
+            certificate = builder.sign(private_key=key,
                                        algorithm=hashes.SHA256(),
                                        backend=default_backend())
         elif self._key_length == 384:
-            certificate = builder.sign(private_key=self.private_key(passphrase),
+            certificate = builder.sign(private_key=key,
                                        algorithm=hashes.SHA256(),
                                        backend=default_backend())
         else:
@@ -175,6 +213,11 @@ class Key(object):
 
 
 def subject_string(node):
+    """
+    Iterate through caTree.Node() object to build list of Subject Key Identifiers
+    :param node: caTree Node to base Subject Name on
+    :return: List of x509.NameAttributes
+    """
     subject_list = []
     if node.common_name:
         subject_list.append(x509.NameAttribute(NameOID.COMMON_NAME, node.common_name))
@@ -196,42 +239,18 @@ def subject_string(node):
 
 
 def subject_alt_name_string(node):
+    """
+    Build list of x509.DNSName objects for cert builder's Subject Alternate Names
+    :param node: caTree.Node() Object to base names on
+    :return:
+    """
     subject_alt_name_list = []
     for name in node.subject_alt_names:
         subject_alt_name_list.append(x509.DNSName(name))
     return subject_alt_name_list
 
 
-OID_NAMES = {
-    NameOID.COMMON_NAME: "commonName",
-    NameOID.COUNTRY_NAME: "countryName",
-    NameOID.LOCALITY_NAME: "localityName",
-    NameOID.STATE_OR_PROVINCE_NAME: "stateOrProvinceName",
-    NameOID.STREET_ADDRESS: "streetAddress",
-    NameOID.ORGANIZATION_NAME: "organizationName",
-    NameOID.ORGANIZATIONAL_UNIT_NAME: "organizationalUnitName",
-    NameOID.SERIAL_NUMBER: "serialNumber",
-    NameOID.SURNAME: "surname",
-    NameOID.GIVEN_NAME: "givenName",
-    NameOID.TITLE: "title",
-    NameOID.GENERATION_QUALIFIER: "generationQualifier",
-    NameOID.X500_UNIQUE_IDENTIFIER: "x500UniqueIdentifier",
-    NameOID.DN_QUALIFIER: "dnQualifier",
-    NameOID.PSEUDONYM: "pseudonym",
-    NameOID.USER_ID: "userID",
-    NameOID.DOMAIN_COMPONENT: "domainComponent",
-    NameOID.EMAIL_ADDRESS: "emailAddress",
-    NameOID.JURISDICTION_COUNTRY_NAME: "jurisdictionCountryName",
-    NameOID.JURISDICTION_LOCALITY_NAME: "jurisdictionLocalityName",
-    NameOID.JURISDICTION_STATE_OR_PROVINCE_NAME: (
-        "jurisdictionStateOrProvinceName"
-    ),
-    NameOID.BUSINESS_CATEGORY: "businessCategory",
-    NameOID.POSTAL_ADDRESS: "postalAddress",
-    NameOID.POSTAL_CODE: "postalCode"}
-
-
-class CertFunctions():
+class CertFunctions:
     def __init__(self):
         self._oids = {'business_category': {'default': False, 'mandatory': False},
                       'common_name': {'default': True, 'mandatory': True},
@@ -258,39 +277,15 @@ class CertFunctions():
                       'user_id': {'default': False, 'mandatory': False},
                       'x500_unique_identifier': {'default': False, 'mandatory': False}}
 
-
-def sign_csr(csr, ca_key: ec.EllipticCurvePrivateKey, ca_cert: x509.Certificate, ca=False):
-    ski = ca_cert.extensions.get_extension_for_class(x509.SubjectKeyIdentifier)
-    one_day = datetime.timedelta(1, 0, 0)
-    builder = x509.CertificateBuilder()
-    builder = builder.subject_name(x509.Name(csr.subject))
-    builder = builder.issuer_name(x509.Name(ca_cert.subject))
-    builder = builder.not_valid_before(datetime.datetime.today() - one_day)
-    builder = builder.not_valid_after(datetime.datetime.utcnow() + datetime.timedelta(days=3600))
-    # builder = builder.serial_number(x509.random_serial_number())
-    builder = builder.serial_number(random_serial_number())
-    builder = builder.public_key(csr.public_key())
-    builder = builder.add_extension(x509.AuthorityKeyIdentifier(key_identifier=ski.value.digest,
-                                                                authority_cert_issuer=None,
-                                                                authority_cert_serial_number=None),
-                                    critical=False)
-    builder = builder.add_extension(x509.KeyUsage(digital_signature=True,
-                                                  content_commitment=True,
-                                                  key_encipherment=False,
-                                                  data_encipherment=False,
-                                                  key_agreement=False,
-                                                  key_cert_sign=True,
-                                                  crl_sign=True,
-                                                  encipher_only=False,
-                                                  decipher_only=False), critical=True)
-    for i in csr.extensions:
-        builder = builder.add_extension(i.value, critical=False)
-    builder = builder.add_extension(x509.BasicConstraints(ca=ca, path_length=None), critical=True,)
-    certificate = builder.sign(private_key=ca_key,
-                               algorithm=hashes.SHA256(),
-                               backend=default_backend())
-    if isinstance(certificate, x509.Certificate):
-        return certificate
+        self.OID_IN_USE = {'common_name': {'default': True, 'mandatory': True},
+                           'country_name': {'default': False, 'mandatory': False},
+                           'domain_component': {'default': False, 'mandatory': False},
+                           'email_address': {'default': False, 'mandatory': False},
+                           'locality_name': {'default': False, 'mandatory': False},
+                           'organization_name': {'default': False, 'mandatory': False},
+                           'organizational_unit_name': {'default': False, 'mandatory': False},
+                           'serial_number': {'default': False, 'mandatory': False},
+                           'state_or_province_name': {'default': False, 'mandatory': False}}
 
 
 def list_oids():
@@ -303,7 +298,7 @@ def list_oids():
 
 def random_serial_number():
     #return utils.int_from_bytes(os.urandom(20), "big") >> 1
-    return int.from_bytes(os.urandom(16), byteorder='big') >> 1
+    return int.from_bytes(os.urandom(16), byteorder='big')
 
 
 def main():
@@ -316,37 +311,20 @@ def main():
     node.domain = 'test.com'
     node.subject_alt_names_add('www.bbc.com')
     node.subject_alt_names_add('www.widgets.com')
+    child_node = caTree.Node('subCA', node)
 
-    root_key = Key(node, 256, 'PassPhrase')
-    root_key.create_root_certificate('PassPhrase')
-    root_key.create_cert_sign_req('PassPhrase')
-    root_key.sign_csr(root_key.csr, 'PassPhrase')
+    node.key = Key(node, 256, 'PassPhrase')
+    node.key.create_root_certificate('PassPhrase')
 
-    print(root_key)
-    # root_cert = create_root_certificate(node, root_key)
-    #
-    # sub_key = create_private_key(ec.SECP256R1, 'PassPhrase')
-    # csr = create_cert_sign_req(node, sub_key)
+    child_node.key = Key(child_node, 256, 'PassPhrase')
+    child_node.key.create_cert_sign_req('PassPhrase')
 
-    # pprint(subject_string(node))
-    # pprint(subject_alt_name_string(node))
+    child_node.key.certificate = node.key.sign_csr(child_node.key.csr, 'PassPhrase')
 
-    # pprint(root_key)
-    # pprint(str(root_cert))
-    # pprint(sub_key)
-    # pprint(csr.decode('utf-8'))
-    # print('Subject      =' + str(csr.subject))
-    # print('extension    =' + str(csr.extensions))
-    # print('Public Key   =' + str(csr.public_key()))
-    # print('Hash Alg     =' + str(csr.signature_hash_algorithm))
-    # print('Sig Alg      =' + str(csr.signature_algorithm_oid))
-    # print('Public Bytes =' + str(csr.public_bytes(serialization.Encoding.PEM)))
-    # print('TBS          =' + str(csr.tbs_certrequest_bytes))
-
-    # print(csr)
-    # sub_cert = certificate()
-    # sub_cert.certificate = (sign_csr(csr, root_key, root_cert, ca=True))
-    # print(sub_cert)
+    print(node.key)
+    print(child_node.key)
+    print(node)
+    print(child_node)
 
 def debug_cert(certificate):
     with open("test_cert.pem", "wb") as f:

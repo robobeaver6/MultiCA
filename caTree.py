@@ -2,6 +2,7 @@ from PyQt5 import QtCore, QtWidgets, QtGui
 from cryptography.hazmat.primitives.asymmetric import rsa, ec
 import uuid
 import crypto
+import logging
 
 
 class Node (object):
@@ -21,15 +22,12 @@ class Node (object):
         self._email_address = None
         self._domain_component = None
         self._organizational_unit_name = None
-        self._private_key = None
-        self._certificate = None
-        self._cert_sign_req = None
         self._date_start = None
         self._date_end = None
         self._key_length = 256
-        self._key = None
+        self._key = crypto.Key(self)
         self._subject_alt_names = []
-        self._rfc_usage = 'KeyEncipherment'
+        self._rfc_usage = 'KeyEstablishment'
         self._basic_constraint_ca = False
         self._basic_constraint_path_length = None
         self._key_usage = {'digital_signature': True,
@@ -171,30 +169,6 @@ class Node (object):
         self._domain_component = value
 
     @property
-    def private_key(self):
-        return self._private_key
-
-    @private_key.setter
-    def private_key(self, value):
-        self._private_key = value
-
-    @property
-    def certificate(self):
-        return self._certificate
-
-    @certificate.setter
-    def certificate(self, value):
-        self._certificate = value
-
-    @property
-    def cert_sign_req(self):
-        return self._cert_sign_req
-
-    @cert_sign_req.setter
-    def cert_sign_req(self, value):
-        self._cert_sign_req = value
-
-    @property
     def date_start(self):
         return self._date_start
 
@@ -226,7 +200,7 @@ class Node (object):
 
     @property
     def basic_constraint_ca(self):
-        if self._basic_constraint_ca:
+        if self._basic_constraint_ca is not None:
             return self._basic_constraint_ca
 
     @basic_constraint_ca.setter
@@ -328,11 +302,17 @@ class Node (object):
         return self._key
 
     @key.setter
-    def key(self, value):
+    def key(self, value: crypto.Key):
         self._key = value
 
     def key_create(self, passphrase=''):
         self._key = crypto.Key(self._key_length, passphrase)
+
+    def __str__(self):
+        if self.parent is None:
+            return 'name={} : Parent={} : Keys_Gen={}'.format(self.name, 'None', self.key is not None)
+        else:
+            return 'name={} : Parent={} : Keys_Gen={}'.format(self.name, self.parent.name, self.key is not None)
 
 
 class TreeModel(QtCore.QAbstractItemModel):
@@ -406,6 +386,18 @@ class TreeModel(QtCore.QAbstractItemModel):
                 return node.encipher_only
             if index.column() == 20:
                 return node.decipher_only
+            if index.column() == 21:
+                if node.key:
+                    if node.key._str_key:
+                        return node.key._str_key.decode()
+            if index.column() == 22:
+                if node.key:
+                    if node.key._str_csr:
+                        return node.key._str_csr.decode()
+            if index.column() == 23:
+                if node.key:
+                    if node.key._str_certificate:
+                        return node.key._str_certificate.decode()
 
     def setData(self, index, value, role=QtCore.Qt.EditRole):
         if index.isValid():
@@ -474,6 +466,15 @@ class TreeModel(QtCore.QAbstractItemModel):
                 if index.column() == 20:
                     node.decipher_only = value
                     self.dataChanged.emit(index, index)
+                if index.column() == 21:
+                    node.key._str_key = value.encode()
+                    self.dataChanged.emit(index, index)
+                if index.column() == 22:
+                    node.key._str_csr = value.encode()
+                    self.dataChanged.emit(index, index)
+                if index.column() == 23:
+                    node.key._str_certificate = value.encode()
+                    self.dataChanged.emit(index, index)
 
                 return True
         return False
@@ -540,16 +541,28 @@ class TreeModel(QtCore.QAbstractItemModel):
                 child_node.email_address = parent_node.email_address
                 child_node.domain_component = parent_node.domain_component
             if 'ca' in kwargs.keys():
-                child_node.basic_constraint_ca = True
-                child_node.basic_constraints = {'digital_signature': True,
-                                                'content_commitment': True,
-                                                'key_encipherment': False,
-                                                'data_encipherment': False,
-                                                'key_agreement': False,
-                                                'key_cert_sign': True,
-                                                'crl_sign': True,
-                                                'encipher_only': False,
-                                                'decipher_only': False}
+                if kwargs['ca'] is True:
+                    child_node.basic_constraint_ca = True
+                    child_node.key_usage = {'digital_signature': True,
+                                            'content_commitment': True,
+                                            'key_encipherment': False,
+                                            'data_encipherment': False,
+                                            'key_agreement': False,
+                                            'key_cert_sign': True,
+                                            'crl_sign': True,
+                                            'encipher_only': False,
+                                            'decipher_only': False}
+                else:
+                    child_node.basic_constraint_ca = False
+                    child_node.key_usage = {'digital_signature': False,
+                                            'content_commitment': False,
+                                            'key_encipherment': False,
+                                            'data_encipherment': False,
+                                            'key_agreement': True,
+                                            'key_cert_sign': False,
+                                            'crl_sign': False,
+                                            'encipher_only': True,
+                                            'decipher_only': True}
             else:
                 child_node = Node('Untitled')
             success = parent_node.insertChild(position, child_node)
@@ -574,9 +587,7 @@ class TreeModel(QtCore.QAbstractItemModel):
             if index.isValid():
                 node = index.internalPointer()
                 if node:
-                    # print("getNode Returned Node")
                     return node
-        # print("getNode Returned Root Node")
         return self._rootNode
 
 
