@@ -92,6 +92,7 @@ class wndMain(base, form):
         self.btnAltNameAdd.clicked.connect(self.on_click_alt_name_add)
         self.btnAltNameDel.clicked.connect(self.on_click_alt_name_del)
         self.btnGenKey.clicked.connect(self.on_click_generate_key)
+        self.btnGenCSR.clicked.connect(self.on_click_generate_csr)
         self.btnGenCert.clicked.connect(self.on_click_generate_certificate)
 
 
@@ -185,19 +186,33 @@ class wndMain(base, form):
             elif node.rfc_usage == 'NonCompliant':
                 self.rbNonCompliant.setChecked(True)
 
+        self._set_widgets_readonly(node)
+
+    def _set_widgets_readonly(self, node):
         # Make Key, CSR and Cert window read only if cert data already generated
         if node.key.private_key_exists:
             self.PrivateKey.setReadOnly(True)
+            self.btnGenKey.setEnabled(False)
+            self.btnGenCSR.setEnabled(False)
         else:
             self.PrivateKey.setReadOnly(False)
+            self.btnGenKey.setEnabled(True)
+            self.btnGenCSR.setEnabled(True)
         if node.key.csr is None:
             self.CertSignReq.setReadOnly(False)
+            self.btnGenCSR.setEnabled(True)
         else:
             self.CertSignReq.setReadOnly(True)
+            self.btnGenCSR.setEnabled(False)
+            self.btnGenKey.setEnabled(False)
         if node.key.certificate is None:
             self.Certificate.setReadOnly(False)
+            self.btnGenCert.setEnabled(True)
         else:
             self.Certificate.setReadOnly(True)
+            self.btnGenKey.setEnabled(False)
+            self.btnGenCSR.setEnabled(False)
+            self.btnGenCert.setEnabled(False)
 
     @pyqtSlot()
     def _subject_alt_names_data_changed(self, current):
@@ -249,13 +264,20 @@ class wndMain(base, form):
     def on_click_create_end_entity(self):
         index = self._selectionModel.currentIndex()
         index = self._proxyModel.mapToSource(index)
-        if index.isValid():
-            name, okPressed = QtWidgets.QInputDialog.getText(self, "End Entity", "End Entity Name:",
-                                                             QtWidgets.QLineEdit.Normal, "")
-            if okPressed and name != '':
-                end_of_list = index.internalPointer().child_count
-                self._model.insertRow(end_of_list, index, name=name, ca=False)
-        self.treeView.resizeColumnToContents(0)
+        node = index.internalPointer()
+        if node.basic_constraint_ca:
+            if index.isValid():
+                name, okPressed = QtWidgets.QInputDialog.getText(self, "End Entity", "End Entity Name:",
+                                                                 QtWidgets.QLineEdit.Normal, "")
+                if okPressed and name != '':
+                    end_of_list = index.internalPointer().child_count
+                    self._model.insertRow(end_of_list, index, name=name, ca=False)
+            self.treeView.resizeColumnToContents(0)
+        else:
+            QtWidgets.QMessageBox.warning(self, 'Parent not a CA',
+                                     'Selected Certificate is not a Certificate Issuing Authority',
+                                     QtWidgets.QMessageBox.Ok)
+
 
     @pyqtSlot()
     def on_click_manage(self):
@@ -317,28 +339,24 @@ class wndMain(base, form):
         node.key.create_private_key(int(self.KeyLength.currentText()), pass_phrase)
         self.PrivateKey.setReadOnly(True)
 
-
-    def on_click_generate_certificate(self):
-        node = self.current_node()
-        pass_phrase = self.get_pass_phrase(node)
-        if not node.key.ready:
-            if node.parent == self._root_node:
-                node.key.create_root_certificate(pass_phrase)
-            else:
-                node.key.create_cert_sign_req(pass_phrase)
-                node.key.certificate = node.parent.key.sign_csr(node.key.csr, self.get_pass_phrase(node.parent))
-
-
     def on_click_generate_csr(self):
         node = self.current_node()
         pass_phrase = self.get_pass_phrase(node)
+        if node.key.private_key_exists:
+            node.key.create_cert_sign_req(pass_phrase)
+        else:
+            QtWidgets.QMessageBox('No Private Key Exists')
+
+    def on_click_generate_certificate(self):
+        node = self.current_node()
+        #
         if node.parent == self._root_node:
-            node.key.create_root_certificate(pass_phrase)
+            if node.key.private_key_exists:
+                pass_phrase = self.get_pass_phrase(node)
+                node.key.create_root_certificate(pass_phrase)
         else:
             if node.parent.key.ready:
-                node.key.create_cert_sign_req(pass_phrase)
                 node.key.certificate = node.parent.key.sign_csr(node.key.csr, self.get_pass_phrase(node.parent))
-                # print(node.key)
 
     @pyqtSlot()
     def cb_basic_constraint_ca_changed(self, *args, **kwargs):
@@ -596,6 +614,8 @@ class wndMain(base, form):
         for key, value in node.key_usage.items():
             output.append('{} - {}'.format(key, value))
         pprint(output)
+
+    # TODO: Generate certificate fingerprints for the GUI so they can be verified
 
 if __name__ == "__main__":
 
