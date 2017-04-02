@@ -1,3 +1,4 @@
+import re
 from PyQt5 import QtCore, QtWidgets, QtGui
 from cryptography.hazmat.primitives.asymmetric import rsa, ec
 import uuid
@@ -500,7 +501,19 @@ class TreeModel(QtCore.QAbstractItemModel):
                     node.key._str_key = value.encode()
                     self.dataChanged.emit(index, index)
                 if index.column() == 22:
-                    node.key._str_csr = value.encode()
+                    if value.startswith('-----BEGIN CERTIFICATE REQUEST-----'):
+                        node.key._str_csr = value.encode()
+                    else:
+                        value = '-----BEGIN CERTIFICATE REQUEST-----\n' + value
+                        value += '-----END CERTIFICATE REQUEST-----\n'
+                        # remove white space and blank lines
+                        new_value = ''
+                        for line in value.split('\n'):
+                            if re.match(r'^\s*$', line):
+                                pass
+                            else:
+                                new_value += line + '\n'
+                        node.key._str_csr = new_value.encode()
                     self.dataChanged.emit(index, index)
                 if index.column() == 23:
                     node.key._str_certificate = value.encode()

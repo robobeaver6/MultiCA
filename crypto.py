@@ -222,8 +222,8 @@ class Key(object):
                                                       crl_sign=True,
                                                       encipher_only=False,
                                                       decipher_only=False), critical=True)
-        for i in csr.extensions:
-            builder = builder.add_extension(i.value, critical=False)
+        # for i in csr.extensions:
+        #     builder = builder.add_extension(i.value, critical=False)
         # TODO Make sure CA flag is appropriatly set
         builder = builder.add_extension(x509.BasicConstraints(ca=True, path_length=None), critical=True, )
         if self._key_length == 256:
