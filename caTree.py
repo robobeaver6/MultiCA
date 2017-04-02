@@ -6,7 +6,7 @@ import logging
 
 
 class Node (object):
-    def __init__(self, name, parent=None):
+    def __init__(self, name, parent=None, ca=True):
         # Tree Specific Variables
         self._name = name
         self._parent = parent
@@ -28,17 +28,41 @@ class Node (object):
         self._key = crypto.Key(self)
         self._subject_alt_names = []
         self._rfc_usage = 'KeyEstablishment'
-        self._basic_constraint_ca = False
-        self._basic_constraint_path_length = None
-        self._key_usage = {'digital_signature': True,
-                           'content_commitment': True,
-                           'key_encipherment': False,
-                           'data_encipherment': False,
-                           'key_agreement': False,
-                           'key_cert_sign': True,
-                           'crl_sign': True,
-                           'encipher_only': False,
-                           'decipher_only': False}
+        if ca is True:
+            self._basic_constraint_ca = True
+            self._basic_constraint_path_length = None
+            self._key_usage = {'digital_signature': True,
+                                    'content_commitment': True,
+                                    'key_encipherment': False,
+                                    'data_encipherment': False,
+                                    'key_agreement': False,
+                                    'key_cert_sign': True,
+                                    'crl_sign': True,
+                                    'encipher_only': False,
+                                    'decipher_only': False}
+        else:
+            self._basic_constraint_ca = False
+            self._basic_constraint_path_length = None
+            self._key_usage = {'digital_signature': False,
+                                    'content_commitment': False,
+                                    'key_encipherment': False,
+                                    'data_encipherment': False,
+                                    'key_agreement': True,
+                                    'key_cert_sign': False,
+                                    'crl_sign': False,
+                                    'encipher_only': True,
+                                    'decipher_only': True}
+        # self._basic_constraint_ca = False
+        # self._basic_constraint_path_length = None
+        # self._key_usage = {'digital_signature': True,
+        #                    'content_commitment': True,
+        #                    'key_encipherment': False,
+        #                    'data_encipherment': False,
+        #                    'key_agreement': False,
+        #                    'key_cert_sign': True,
+        #                    'crl_sign': True,
+        #                    'encipher_only': False,
+        #                    'decipher_only': False}
 
         if parent is not None:
             parent.addChild(self)
@@ -70,6 +94,10 @@ class Node (object):
     @property
     def child_count(self):
         return len(self._children)
+
+    @property
+    def children(self):
+        return self._children
 
     @property
     def parent(self):
@@ -189,7 +217,9 @@ class Node (object):
         return self._subject_alt_names
 
     @subject_alt_names.setter
-    def subject_alt_names(self, value):
+    def subject_alt_names(self, value: list()):
+        for i, v in enumerate(value):
+            value[i] = v.strip()
         self._subject_alt_names = value
 
     def subject_alt_names_add(self, value):
@@ -302,7 +332,7 @@ class Node (object):
         return self._key
 
     @key.setter
-    def key(self, value: crypto.Key):
+    def key(self, value):
         self._key = value
 
     def key_create(self, passphrase=''):
@@ -523,7 +553,7 @@ class TreeModel(QtCore.QAbstractItemModel):
         else:
             return QtCore.QModelIndex()
 
-    def insertRow(self, row, parent=None, *args, **kwargs):
+    def insertRow(self, row, parent=None, name='untitled', ca=True):
         return self.insertRows(row, 1, parent, **kwargs)
 
     def insertRows(self, position, rows, parent=QtCore.QModelIndex(), *args, **kwargs):
@@ -531,40 +561,14 @@ class TreeModel(QtCore.QAbstractItemModel):
         parent_node = self.getNode(parent)
         self.beginInsertRows(parent, position, position+rows-1)
         for row in range(rows):
-            if 'name' in kwargs.keys():
-                child_node = Node(kwargs['name'])
-                child_node.organizational_unit_name = parent_node.organizational_unit_name
-                child_node.organization_name = parent_node.organization_name
-                child_node.locality_name = parent_node.locality_name
-                child_node.state_or_province_name = parent_node.state_or_province_name
-                child_node.country_name = parent_node.country_name
-                child_node.email_address = parent_node.email_address
-                child_node.domain_component = parent_node.domain_component
-            if 'ca' in kwargs.keys():
-                if kwargs['ca'] is True:
-                    child_node.basic_constraint_ca = True
-                    child_node.key_usage = {'digital_signature': True,
-                                            'content_commitment': True,
-                                            'key_encipherment': False,
-                                            'data_encipherment': False,
-                                            'key_agreement': False,
-                                            'key_cert_sign': True,
-                                            'crl_sign': True,
-                                            'encipher_only': False,
-                                            'decipher_only': False}
-                else:
-                    child_node.basic_constraint_ca = False
-                    child_node.key_usage = {'digital_signature': False,
-                                            'content_commitment': False,
-                                            'key_encipherment': False,
-                                            'data_encipherment': False,
-                                            'key_agreement': True,
-                                            'key_cert_sign': False,
-                                            'crl_sign': False,
-                                            'encipher_only': True,
-                                            'decipher_only': True}
-            else:
-                child_node = Node('Untitled')
+            child_node = Node(kwargs['name'], ca=kwargs['ca'])
+            child_node.organizational_unit_name = parent_node.organizational_unit_name
+            child_node.organization_name = parent_node.organization_name
+            child_node.locality_name = parent_node.locality_name
+            child_node.state_or_province_name = parent_node.state_or_province_name
+            child_node.country_name = parent_node.country_name
+            child_node.email_address = parent_node.email_address
+            child_node.domain_component = parent_node.domain_component
             success = parent_node.insertChild(position, child_node)
         self.endInsertRows()
         return success

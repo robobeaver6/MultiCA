@@ -45,7 +45,7 @@ class Key(object):
             output += str(self._str_certificate, 'utf-8')
         return output
 
-    def create_private_key(self, length: int=256, pass_phrase: str=''):
+    def create_private_key(self, length: int=256, pass_phrase: str=None):
         if length == 256:
             self._key_length = length
             curve = ec.SECP256R1
@@ -56,10 +56,15 @@ class Key(object):
             raise ValueError
         if not self._str_key:
             key = ec.generate_private_key(curve=curve, backend=default_backend())
-            self._str_key = key.private_bytes(encoding=serialization.Encoding.PEM,
-                                              format=serialization.PrivateFormat.TraditionalOpenSSL,
-                                              encryption_algorithm=serialization.BestAvailableEncryption(
-                                                  pass_phrase.encode()))
+            if pass_phrase:
+                self._str_key = key.private_bytes(encoding=serialization.Encoding.PEM,
+                                                  format=serialization.PrivateFormat.TraditionalOpenSSL,
+                                                  encryption_algorithm=serialization.BestAvailableEncryption(
+                                                      pass_phrase.encode()))
+            else:
+                self._str_key = key.private_bytes(encoding=serialization.Encoding.PEM,
+                                                  format=serialization.PrivateFormat.TraditionalOpenSSL,
+                                                  encryption_algorithm=serialization.NoEncryption())
 
     @property
     def private_key_exists(self):
@@ -68,13 +73,19 @@ class Key(object):
         else:
             return False
 
-    def private_key(self, passphrase=''):
+    def private_key(self, pass_phrase=None):
+        if pass_phrase:
+            pass_phrase = pass_phrase.encode()
+
         try:
             return serialization.load_pem_private_key(self._str_key,
-                                                      passphrase.encode(),
+                                                      pass_phrase,
                                                       default_backend())
         except ValueError as e:
             print('ERROR: Incorrect Password')
+
+    def private_key_delete(self):
+        self._str_key = None
 
     @property
     def certificate(self):
@@ -91,7 +102,16 @@ class Key(object):
     def certificate(self, value):
         self._str_certificate = value.public_bytes(serialization.Encoding.PEM)
 
+    @certificate.deleter
+    def certificate(self):
+        del self._str_certificate
 
+    @property
+    def certificate_exists(self):
+        if self._str_certificate is not None:
+            return True
+        else:
+            return False
 
     @property
     def csr(self):
@@ -99,6 +119,16 @@ class Key(object):
             return x509.load_pem_x509_csr(self._str_csr, default_backend())
         else:
             return None
+
+    @property
+    def csr_exists(self):
+        if self._str_csr is not None:
+            return True
+        else:
+            return False
+
+    def csr_delete(self):
+        self._str_csr = None
 
     @property
     def ready(self):
@@ -142,32 +172,33 @@ class Key(object):
         else:
             raise ValueError
 
-    def create_cert_sign_req(self, passphrase):
+    def create_cert_sign_req(self, pass_phrase=None):
         """
         Generate a Certificate Signing Request (CSR) for the current object's private key
-        :param passphrase: Private key Password
+        :rtype: object
+        :param pass_phrase: Private key Password
         :return:
         """
         node = self._node
         builder = x509.CertificateSigningRequestBuilder().subject_name(x509.Name(subject_string(node)))
         builder = builder.add_extension(x509.SubjectAlternativeName(subject_alt_name_string(node)), critical=False,)
         if self._key_length == 256:
-            csr = builder.sign(self.private_key(passphrase), hashes.SHA256(), default_backend())
+            csr = builder.sign(self.private_key(pass_phrase), hashes.SHA256(), default_backend())
         elif self._key_length == 384:
-            csr = builder.sign(self.private_key(passphrase), hashes.SHA384(), default_backend())
+            csr = builder.sign(self.private_key(pass_phrase), hashes.SHA384(), default_backend())
         else:
             raise ValueError
         self._str_csr = csr.public_bytes(serialization.Encoding.PEM)
 
-    def sign_csr(self, csr, passphrase):
+    def sign_csr(self, csr, pass_phrase):
         """
         Signs a Certificate Signing Request with the key and cert of this object
         :param csr: Certificate Signing Request passed to function for signing
-        :param passphrase: Private key passphrase
+        :param pass_phrase: Private key passphrase
         :return: Signed x509 Certificate object
         """
         ski = self.certificate.extensions.get_extension_for_class(x509.SubjectKeyIdentifier)
-        key = self.private_key(passphrase)
+        key = self.private_key(pass_phrase)
         one_day = datetime.timedelta(1, 0, 0)
         builder = x509.CertificateBuilder()
         builder = builder.subject_name(x509.Name(csr.subject))

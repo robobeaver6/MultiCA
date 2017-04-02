@@ -92,6 +92,7 @@ class wndMain(base, form):
         self.btnAltNameAdd.clicked.connect(self.on_click_alt_name_add)
         self.btnAltNameDel.clicked.connect(self.on_click_alt_name_del)
         self.btnGenKey.clicked.connect(self.on_click_generate_key)
+        self.btnGenCSR.clicked.connect(self.on_click_generate_csr)
         self.btnGenCert.clicked.connect(self.on_click_generate_certificate)
 
 
@@ -256,6 +257,10 @@ class wndMain(base, form):
                 end_of_list = index.internalPointer().child_count
                 self._model.insertRow(end_of_list, index, name=name, ca=False)
         self.treeView.resizeColumnToContents(0)
+        # TODO: Ensure not CA.
+        # TODO: Make fields non editable after cert creation
+        # TODO: impliment date fields
+        # TODO: Key Usage
 
     @pyqtSlot()
     def on_click_manage(self):
@@ -320,13 +325,28 @@ class wndMain(base, form):
 
     def on_click_generate_certificate(self):
         node = self.current_node()
-        pass_phrase = self.get_pass_phrase(node)
-        if not node.key.ready:
+        # pass_phrase = self.get_pass_phrase(node)
+        if node.key.certificate_exists:
+            return
+        if node.key.private_key_exists:
             if node.parent == self._root_node:
-                node.key.create_root_certificate(pass_phrase)
-            else:
-                node.key.create_cert_sign_req(pass_phrase)
-                node.key.certificate = node.parent.key.sign_csr(node.key.csr, self.get_pass_phrase(node.parent))
+                node.key.create_root_certificate(self.get_pass_phrase(node))
+                return
+            elif not node.key.csr_exists:
+                node.key.create_cert_sign_req(self.get_pass_phrase(node))
+
+        if node.key.csr_exists and node.parent.key.ready:
+            node.key.certificate = node.parent.key.sign_csr(node.key.csr, self.get_pass_phrase(node.parent))
+
+
+        # if not node.key.ready:
+        #     if node.parent == self._root_node:
+        #         node.key.create_root_certificate(pass_phrase)
+        #         break
+        #     if not node.key.csr_exists:
+        #         node.key.create_cert_sign_req(pass_phrase)
+        #
+        #     node.key.certificate = node.parent.key.sign_csr(node.key.csr, self.get_pass_phrase(node.parent))
 
 
     def on_click_generate_csr(self):
