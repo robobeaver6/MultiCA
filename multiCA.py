@@ -357,7 +357,7 @@ class wndMain(base, form):
         else:
             if node.parent.key.ready:
                 node.key.create_cert_sign_req(pass_phrase)
-                node.key.certificate = node.parent.key.sign_csr(node.key.csr, self.get_pass_phrase(node.parent))
+                # node.key.certificate = node.parent.key.sign_csr(node.key.csr, self.get_pass_phrase(node.parent))
                 # print(node.key)
 
     @pyqtSlot()
@@ -583,7 +583,10 @@ class wndMain(base, form):
                                                                      "Pass Phrase",
                                                                      "Pass Phrase for {}:".format(node.name),
                                                                      QtWidgets.QLineEdit.Normal)
-            if ok_pressed and pass_phrase != '':
+            # TODO: Fix cancel button still generates cert
+            if pass_phrase == '':
+                pass_phrase = None
+            if ok_pressed:
                 # check if password was valid if node key exists
                 if node.key.private_key_exists:
                     private_key = node.key.private_key(pass_phrase)

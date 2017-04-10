@@ -566,8 +566,8 @@ class TreeModel(QtCore.QAbstractItemModel):
         else:
             return QtCore.QModelIndex()
 
-    def insertRow(self, row, parent=None, name='untitled', ca=True):
-        return self.insertRows(row, 1, parent, **kwargs)
+    def insertRow(self, row, parent=None, *args, **kwargs):
+        return self.insertRows(row, 1, parent, *args, **kwargs)
 
     def insertRows(self, position, rows, parent=QtCore.QModelIndex(), *args, **kwargs):
         success = None
